@@ -11,6 +11,7 @@
 #include "labsland/simulations/watertanksimulation.h"
 #include "rhlab/butterfly.h"
 #include "deusto/door.h"
+#include "deusto/watertankDeusto.h"
 #include "labsland/simulations/utils/communicatorfiles.h"
 #include "labsland/simulations/targetdevicefiles.h"
 #include "labsland/utils/timemanagerstd.h"
@@ -109,7 +110,9 @@ int main(int argc, char * argv[]) {
         runner = new ConcreteSimulationRunner<STM32_WB55RG_ButterflySimulation, ButterflyData, ButterflyRequest>(configuration, mode);
     } else if (simulation == "door") {
         runner = new ConcreteSimulationRunner<DoorSimulation, DoorData, DoorRequest>(configuration, mode);
-    } else {
+    } else if (simulation == "watertankDeusto") {
+        runner = new ConcreteSimulationRunner<WatertankDeustoSimulation, WatertankDeustoData, WatertankDeustoRequest>(configuration, mode);
+    }else {
         cerr << "Invalid simulation: '" << simulation << "'. Use a valid name" << endl;
         return 2;
     }
