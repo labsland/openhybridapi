@@ -7,4 +7,4 @@ gpios:
   sim2dut:
     labels: [ lowSensor, midSensor, highSensor, pump1Hot, pump2Hot ]
   dut2sim:
-    labels: [ pump1, pump2 ]
+    labels: [ pump1Bit0, pump1Bit1, pump2Bit0, pump2Bit1 ]

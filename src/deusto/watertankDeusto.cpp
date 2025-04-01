@@ -8,17 +8,19 @@
  
      this->targetDevice->initializeSimulation(
              {"lowSensorActive", "midSensorActive", "highSensorActive", "pump1Hot", "pump2Hot"},
-             {"pump1", "pump2"}
+             {"pump1Bit0","pump1Bit1", "pump2Bit0", "pump2Bit1"}
      );
  
      float radius = WATERTANK_DIAMETER / 2;
      mState.totalVolume = M_PI * radius * radius * WATERTANK_HEIGHT * 1000;
  
      mState.volume = mState.totalVolume / 2;
-     mState.level = 0.5;
+     mState.level = 0.9;
  
-     mState.pump1Active = true;
-     mState.pump2Active = true;
+     mState.pump1ActiveBit0 = false;
+     mState.pump1ActiveBit1 = false;
+     mState.pump2ActiveBit0 = false;
+     mState.pump2ActiveBit1 = false;
  
      setReportWhenMarked(true);
  }
@@ -48,26 +50,41 @@
      if (mState.pump2Temperature>=100) mState.pump2Broken = true;
      else mState.pump2Broken = false;
 
-     mState.pump1Active = this->targetDevice->getGpio("pump1");
-     mState.pump2Active = this->targetDevice->getGpio("pump2");
+     mState.pump1ActiveBit0 = this->targetDevice->getGpio("pump1Bit0");
+     mState.pump1ActiveBit1 = this->targetDevice->getGpio("pump1Bit1");
+
+     mState.pump2ActiveBit0 = this->targetDevice->getGpio("pump2Bit0");
+     mState.pump2ActiveBit1 = this->targetDevice->getGpio("pump2Bit1");
+
+     this->log() << "Pumps: pump1: " << mState.pump1ActiveBit0 << mState.pump1ActiveBit1 << "; pump2: " << mState.pump2ActiveBit0 << mState.pump2ActiveBit1 << std::endl;
  
-     this->log() << "Pumps: pump1: " << mState.pump1Active << "; pump2: " << mState.pump2Active << std::endl;
- 
-     if(mState.pump1Active) {
-        if(mState.pump1Temperature<100) mState.pump1Temperature += 6 * delta;
+     if(mState.pump1ActiveBit0 || mState.pump1ActiveBit1) {
+        if(mState.pump1Temperature<100) mState.pump1Temperature += 3 * delta;
         else mState.pump1Temperature = 100;
 
-        if(!mState.pump1Broken) addedWater += PUMP1_FLOWRATE * delta;
+        if (!mState.pump1Broken) {
+            if (mState.pump1ActiveBit0 == 1 && mState.pump1ActiveBit1 == 1) {
+               addedWater += 2 * PUMP1_FLOWRATE * delta;
+            } else {
+               addedWater += PUMP1_FLOWRATE * delta;
+            }
+         }
      }else{
         if(mState.pump1Temperature>0) mState.pump1Temperature -= 6 * delta;
         else mState.pump1Temperature = 0;
      }
  
-     if(mState.pump2Active) {
-        if(mState.pump2Temperature<100) mState.pump2Temperature += 6 * delta;
+     if(mState.pump2ActiveBit0 || mState.pump2ActiveBit1) {
+        if(mState.pump2Temperature<100) mState.pump2Temperature += 3 * delta;
         else mState.pump2Temperature = 100;
-
-        if(!mState.pump2Broken) addedWater += PUMP2_FLOWRATE * delta;
+        
+        if (!mState.pump2Broken) {
+            if (mState.pump2ActiveBit0 == 1 && mState.pump2ActiveBit1 == 1) {
+               addedWater += 2 * PUMP2_FLOWRATE * delta;
+            } else {
+               addedWater += PUMP2_FLOWRATE * delta;
+            }
+         }
      }else{
         if(mState.pump2Temperature>0) mState.pump2Temperature -= 6 * delta;
         else mState.pump2Temperature = 0;
