@@ -29,8 +29,8 @@
 
      std::string serialize() const {
          std::stringstream stream;
-         stream << level << "&" << totalVolume << "&" << volume << "&" << pump1ActiveBit0 << pump1ActiveBit1 << "&" << pump2ActiveBit0 << pump2ActiveBit1 << "&" <<
-             pump1Temperature << "&" << pump2Temperature << "&" << currentLoad << "&" << lowSensorActive << "&" <<
+         stream << level << "&" << pump1ActiveBit0 << pump1ActiveBit1 << "&" << pump2ActiveBit0 << pump2ActiveBit1 << "&" <<
+             pump1Temperature << "&" << pump2Temperature << "&" << lowSensorActive << "&" <<
              midSensorActive << "&" << highSensorActive << "&"<< pump1Hot << "&" << pump2Hot << "&" <<
              pump1Broken << "&" << pump2Broken << "&";
          return stream.str();

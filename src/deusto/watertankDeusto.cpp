@@ -40,10 +40,10 @@
  
      double addedWater = 0;
 
-     if (mState.pump1Temperature>=85) mState.pump1Hot = true;
-     else mState.pump1Hot = false;
+     if (mState.pump1Temperature>=90) mState.pump1Hot = true;
+     else if (mState.pump1Hot && mState.pump1Temperature<=30)mState.pump1Hot = false;
      if (mState.pump2Temperature>=85) mState.pump2Hot = true;
-     else mState.pump2Hot = false;
+     else if(mState.pump2Hot && mState.pump2Temperature<=30) mState.pump2Hot = false;
 
      if (mState.pump1Temperature>=100) mState.pump1Broken = true;
      else mState.pump1Broken = false;
@@ -65,7 +65,7 @@
         if (!mState.pump1Broken) {
             if (mState.pump1ActiveBit0 == 1 && mState.pump1ActiveBit1 == 1) {
                addedWater += 2 * PUMP1_FLOWRATE * delta;
-            } else {
+            } else if(mState.pump1ActiveBit0 == 0 && mState.pump1ActiveBit1 == 1){
                addedWater += PUMP1_FLOWRATE * delta;
             }
          }
@@ -81,7 +81,7 @@
         if (!mState.pump2Broken) {
             if (mState.pump2ActiveBit0 == 1 && mState.pump2ActiveBit1 == 1) {
                addedWater += 2 * PUMP2_FLOWRATE * delta;
-            } else {
+            } else if(mState.pump2ActiveBit0 == 0 && mState.pump2ActiveBit1 == 1){
                addedWater += PUMP2_FLOWRATE * delta;
             }
          }
