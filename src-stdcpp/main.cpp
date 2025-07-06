@@ -12,6 +12,7 @@
 #include "rhlab/butterfly.h"
 #include "deusto/door.h"
 #include "deusto/watertankDeusto.h"
+#include "deusto/watertankDeustoTemperature.h"
 #include "labsland/simulations/utils/communicatorfiles.h"
 #include "labsland/simulations/targetdevicefiles.h"
 #include "labsland/utils/timemanagerstd.h"
@@ -110,6 +111,8 @@ int main(int argc, char * argv[]) {
         runner = new ConcreteSimulationRunner<DoorSimulation, DoorData, DoorRequest>(configuration, mode);
     } else if (simulation == "watertankDeusto") {
         runner = new ConcreteSimulationRunner<WatertankDeustoSimulation, WatertankDeustoData, WatertankDeustoRequest>(configuration, mode);
+    } else if (simulation == "watertankDeustoTemperature") {
+        runner = new ConcreteSimulationRunner<WatertankDeustoTemperatureSimulation, WatertankDeustoTemperatureData, WatertankDeustoTemperatureRequest>(configuration, mode);
     }else {
         cerr << "Invalid simulation: '" << simulation << "'. Use a valid name" << endl;
         return 2;
