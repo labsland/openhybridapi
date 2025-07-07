@@ -16,6 +16,8 @@ add_executable(hybridapi
     src/deusto/door.cpp
     src/deusto/watertankDeusto.cpp
     src/deusto/watertankDeustoTemperature.cpp
+    src/deusto/wiperDeusto.cpp
+    src/deusto/wiper2BitDeusto.cpp
     src/rhlab/butterfly.cpp
 
 )

@@ -7,7 +7,7 @@
  void WatertankDeustoSimulation::initialize() {
  
      this->targetDevice->initializeSimulation(
-             {"lowSensorActive", "midSensorActive", "highSensorActive", "pump1Hot", "pump2Hot"},
+             {"lowSensorActive", "midSensorActive", "highSensorActive"},
              {"pump1Bit0","pump1Bit1", "pump2Bit0", "pump2Bit1"}
      );
  
