@@ -10,9 +10,9 @@
 aws s3 sync --region eu-central-1 wiperDeusto s3://ll-static-apps/simulations/wiperDeusto
 
 
-aws s3 cp --region eu-central-1 wiperDeusto/Build/wiperDeusto.data.gz s3://ll-static-apps/simulations/wiperDeusto/Build/wiperDeusto.data.gz --content-encoding gzip --metadata-directive REPLACE
-aws s3 cp --region eu-central-1 wiperDeusto/Build/wiperDeusto.framework.js.gz s3://ll-static-apps/simulations/wiperDeusto/Build/wiperDeusto.framework.js.gz --content-encoding gzip --metadata-directive REPLACE
-aws s3 cp --region eu-central-1 wiperDeusto/Build/wiperDeusto.wasm.gz s3://ll-static-apps/simulations/wiperDeusto/Build/wiperDeusto.wasm.gz --content-encoding gzip --metadata-directive REPLACE
+aws s3 cp --region eu-central-1 wiperDeusto/Build/CarWiperDeusto.data.gz s3://ll-static-apps/simulations/wiperDeusto/Build/CarWiperDeusto.data.gz --content-encoding gzip --metadata-directive REPLACE
+aws s3 cp --region eu-central-1 wiperDeusto/Build/CarWiperDeusto.framework.js.gz s3://ll-static-apps/simulations/wiperDeusto/Build/CarWiperDeusto.framework.js.gz --content-encoding gzip --metadata-directive REPLACE
+aws s3 cp --region eu-central-1 wiperDeusto/Build/CarWiperDeusto.wasm.gz s3://ll-static-apps/simulations/wiperDeusto/Build/CarWiperDeusto.wasm.gz --content-encoding gzip --metadata-directive REPLACE
 
 
 # Invalidate cloudfront cache.
