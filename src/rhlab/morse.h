@@ -60,56 +60,36 @@ namespace RHLab::Morse {
 
     // struct that tracks the virtual LED states
     struct MorseData : public BaseOutputDataType {
-        char buffer[BUFFER_SIZE];          // Morse code buffer (dots, dashes, spaces)
         char translatedText[TEXT_BUFFER_SIZE]; // Translated text buffer
-        int lastPos = 0;
-        int lastTextPos = 0;
 
         public:
             MorseData() {
-                for (int i = 0; i < BUFFER_SIZE; i++){
-                    buffer[i] = '\0';
-                } 
                 for (int i = 0; i < TEXT_BUFFER_SIZE; i++){
                     translatedText[i] = '\0';
                 }
             }
 
             void clearBuffer() {
-                for (int i = 0; i < BUFFER_SIZE; i++)  
-                    buffer[i] = '\0';
                 for (int i = 0; i < TEXT_BUFFER_SIZE; i++)
                     translatedText[i] = '\0';
-                lastPos = 0;
-                lastTextPos = 0;
             }
 
-            void addCharacter(char c) {
-                buffer[lastPos] = c;
-                lastPos++;
-                if (lastPos >= BUFFER_SIZE - 2) {
-                     lastPos = 0;
+            void replaceWithPhrase(const std::string & phrase) {
+                if (phrase.size() > TEXT_BUFFER_SIZE - 1) {
+                    // If the phrase is longer than the buffer, change the last 3 characters for "..."
+                    memcpy(translatedText, phrase.data(), TEXT_BUFFER_SIZE - 4);
+                    translatedText[TEXT_BUFFER_SIZE - 4] = '.';
+                    translatedText[TEXT_BUFFER_SIZE - 3] = '.';
+                    translatedText[TEXT_BUFFER_SIZE - 2] = '.';
+                    translatedText[TEXT_BUFFER_SIZE - 1] = '\0';
+                } else {
+                    memcpy(translatedText, phrase.data(), phrase.size());
+                    translatedText[phrase.size()] = '\0';
                 }
-                buffer[lastPos + 1] = '\0';
-            }
-
-            void addTranslatedCharacter(char c) {
-                translatedText[lastTextPos] = c;
-                lastTextPos++;
-                if (lastTextPos >= TEXT_BUFFER_SIZE - 2) {
-                    lastTextPos = 0;
-                }
-                translatedText[lastTextPos + 1] = '\0';
             }
 
             string serialize() const {
-                // Combine the Morse buffer and translated text into a JSON-like format
-                string result = "{\"morse\":\"";
-                result += buffer;
-                result += "\",\"text\":\"";
-                result += translatedText;
-                result += "\"}";
-                return result;
+                return translatedText;
             }
     };
 
@@ -118,7 +98,7 @@ namespace RHLab::Morse {
         private:
             // Speed threshold variables
             double DOT_THRESHOLD = 1.0;
-            double DASH_THRESHOLD = 2.0;
+            double DASH_THRESHOLD = 1.5;
             double LETTER_SPACE = 2.0;
             double WORD_SPACE = 4.0;
             
@@ -139,6 +119,7 @@ namespace RHLab::Morse {
             void update(double delta) override;
             void initialize() override;
             void interpretSignal(bool isHigh, double duration);
+            void addMorseCharacter(char c);
             void updateSpeedThresholds(char speed);
     };
 }

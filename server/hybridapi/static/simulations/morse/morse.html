@@ -114,6 +114,48 @@
       border: 1px solid #ddd;
       border-radius: 3px;
     }
+    
+    /* Controls styles */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+    }
+    
+    .speed-select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: white;
+      font-family: 'Courier New', monospace;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    
+    .clear-btn {
+      padding: 8px 15px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      transition: background-color 0.3s;
+    }
+    
+    .clear-btn:hover {
+      background-color: #c0392b;
+    }
+    
+    .speed-label {
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -129,6 +171,18 @@
       <div class="morse-symbols" id="morse-symbols"></div>
       <hr>
       <div class="translated-text" id="translated-text"></div>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <span class="speed-label">Speed:</span>
+        <select id="speed-select" class="speed-select">
+          <option value="normal">Normal</option>
+          <option value="fast">Fast</option>
+          <option value="slow">Slow</option>
+        </select>
+      </div>
+      <button id="clear-btn" class="clear-btn">Clear Messages</button>
     </div>
     
     <div class="morse-legend">
@@ -160,6 +214,22 @@
         <div class="legend-item">X: -..-</div>
         <div class="legend-item">Y: -.--</div>
         <div class="legend-item">Z: --..</div>
+        <div class="legend-item">0: -----</div>
+        <div class="legend-item">1: .----</div>
+        <div class="legend-item">2: ..---</div>
+        <div class="legend-item">3: ...--</div>
+        <div class="legend-item">4: ....-</div>
+        <div class="legend-item">5: .....</div>
+        <div class="legend-item">6: -....</div>
+        <div class="legend-item">7: --...</div>
+        <div class="legend-item">8: ---..</div>
+        <div class="legend-item">9: ----.</div>
+        <div class="legend-item">.: .-.-.-</div>
+        <div class="legend-item">,: --..--</div>
+        <div class="legend-item">?: ..--..</div>
+        <div class="legend-item">!: -.-.--</div>
+        <div class="legend-item">/: -..-.</div>
+        <div class="legend-item">Space: /</div>
       </div>
     </div>
     
@@ -172,79 +242,176 @@
     const translatedTextElement = document.getElementById("translated-text");
     const statusElement = document.getElementById("status");
     const signalLedElement = document.getElementById("signal-led");
-    
+    const speedSelectElement = document.getElementById("speed-select");
+    const clearButtonElement = document.getElementById("clear-btn");
+
     // Store received data globally
     window.receivedMorseData = "";
     
     // Create array for tracking timers
     window.morseTimers = [];
     
-    // Process incoming messages
+    // Function to send message to parent window
+    function sendMessage(message) {
+      window.parent.postMessage({
+        messageType: "web2sim",
+        value: message
+      }, "*");
+      console.log(`Sent message: ${message}`);
+    }
+    
+    // Initialize event listeners for controls
+    speedSelectElement.addEventListener("change", function() {
+      // Get selected speed
+      const selectedSpeed = this.value; // "normal", "fast", or "slow"
+      
+      // Create message with format "<SPEED>:<CLEARING>"
+      // For speed change, clearing is 0
+      const message = `${selectedSpeed}:0`;
+      
+      // Send message to parent window
+      sendMessage(message);
+      
+      statusElement.textContent = `Speed set to ${selectedSpeed} at ${new Date().toLocaleTimeString()}`;
+    });
+
+    var onClearButtonClickHandler = function() {
+      // Get current speed
+      const currentSpeed = speedSelectElement.value;
+      
+      // Clear the DOM elements
+      morseSymbolsElement.innerHTML = "";
+      translatedTextElement.innerHTML = "";
+      
+      // Clear any stored data
+      window.receivedMorseData = "";
+      
+      // If there were any timers or intervals, clear them
+      if (window.morseTimers) {
+        window.morseTimers.forEach(timerId => clearTimeout(timerId));
+        window.morseTimers = [];
+      }
+      
+      // Send clear message to parent window
+      sendMessage(`${currentSpeed}:1`);
+      
+      // Update status
+      statusElement.textContent = `Messages cleared at ${new Date().toLocaleTimeString()}`;
+      
+      // Add a very short delay (50ms) to ensure messages are processed in proper order
+      setTimeout(() => {
+        // Send restore message
+        sendMessage(`${currentSpeed}:0`);
+        
+        // Update status
+        statusElement.textContent = `Ready to receive at ${new Date().toLocaleTimeString()}`;
+      }, 500);
+    }
+    
+    // Clear button click handler with immediate auto-restore
+    clearButtonElement.addEventListener("click", onClearButtonClickHandler);
+    
+    // Process incoming messages from parent
     window.addEventListener("message", (event) => {
       // Check if the message is from the parent window
-      if (event.source != parent) {
+      if (event.source !== parent) {
         console.log("Message from somewhere other than the parent window", event);
         return;
       }
       
-      // Check if it's a command message (like clear)
-      if (event.data.command === "clear") {
+      // Process sim2web messages - these come from the backend
+      if (event.data.messageType === "sim2web") {
+        // Process the received data
+        const receivedData = event.data.value;
+        console.log("Received data:", receivedData);
+        
+        // Store the received data globally
+        window.receivedMorseData = receivedData;
+        
+        // Update the status
+        statusElement.textContent = "Signal received at " + new Date().toLocaleTimeString();
+        
+        // Process the morse code
+        processMorseCode(receivedData);
+        return;
+      }
+      
+      // Handle legacy message format (direct value)
+      if (event.data.hasOwnProperty('value')) {
+        // Process the received data
+        const receivedData = event.data.value;
+        console.log("Received data (legacy format):", receivedData);
+        
+        // Store the received data globally
+        window.receivedMorseData = receivedData;
+        
+        // Update the status
+        statusElement.textContent = "Signal received at " + new Date().toLocaleTimeString();
+        
+        // Process the morse code
+        processMorseCode(receivedData);
+        return;
+      }
+      
+      // Handle clear command
+      if (event.data.command === "clear" || event.data.clear === true) {
         clearAllMessages();
         return;
       }
       
-      // If it's a clear command directly
-      if (event.data.clear === true) {
-        clearAllMessages();
-        return;
-      }
-      
-      // Check if value property exists before trying to access it
-      if (!event.data.hasOwnProperty('value')) {
-        console.log("Received message without 'value' property:", event.data);
-        return;
-      }
-      
-      // Process the received data
-      const receivedData = event.data.value;
-      console.log("Received data:", receivedData);
-      
-      // Store the received data globally
-      window.receivedMorseData = receivedData;
-      
-      // Update the status
-      statusElement.textContent = "Signal received at " + new Date().toLocaleTimeString();
-      
-      // Process the morse code
-      processMorseCode(receivedData);
+      console.log("Unhandled message:", event.data);
     });
+
+    let fullMorseHistory = "";
     
     // Function to process morse code and update the UI
-    function processMorseCode(morseData) {
-      try {
-        // Parse the JSON data from the backend
-        const data = JSON.parse(morseData);
-        
-        // Update the morse symbols display
-        morseSymbolsElement.textContent = data.morse;
-        
-        // Update the translated text directly from the backend
-        translatedTextElement.textContent = data.text;
-        
-        // Show active signal briefly
-        signalLedElement.classList.add("active");
-        setTimeout(() => {
-          signalLedElement.classList.remove("active");
-        }, 100);
-        
-      } catch (e) {
-        console.error("Error processing morse data:", e);
-        
-        // Fallback to the old format if JSON parsing fails
-        morseSymbolsElement.textContent = morseData;
+    function processMorseCode(inputData) {
+      console.log("Processing input:", JSON.stringify(inputData));
+      
+      // Define the Morse code dictionary (encode)
+      const morseDict = {
+        'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.',
+        'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---',
+        'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---',
+        'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
+        'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--',
+        'Z': '--..', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+        '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+        '0': '-----', ' ': '/', '.': '.-.-.-', ',': '--..--', '?': '..--..',
+        "'": '.----.', '!': '-.-.--', '/': '-..-.', '(': '-.--.', 
+        ')': '-.--.-', '&': '.-...', ':': '---...', ';': '-.-.-.', 
+        '=': '-...-', '+': '.-.-.', '-': '-....-', '_': '..--.-', 
+        '"': '.-..-.', '$': '...-..-', '@': '.--.-.'
+      };
+
+      // First convert slashes to spaces for display in the text output
+      const displayText = inputData.replace(/\//g, ' ');
+      translatedTextElement.textContent = displayText;
+      
+      // Convert to Morse symbols - keeping the slashes for the Morse code representation
+      let morseSymbols = "";
+      for (const char of inputData) {
+        if (morseDict[char.toUpperCase()]) {
+          morseSymbols += morseDict[char.toUpperCase()] + " ";
+        } else {
+          morseSymbols += "? ";
+        }
       }
+      
+      morseSymbolsElement.textContent = morseSymbols.trim();
+      
+      // Debug logs
+      console.log("Original:", JSON.stringify(inputData));
+      console.log("Display text:", JSON.stringify(displayText));
+      console.log("Morse symbols:", morseSymbols);
+      
+      // Show LED signal 
+      signalLedElement.classList.add("active");
+      setTimeout(() => {
+        signalLedElement.classList.remove("active");
+      }, 100);
     }
-    
+
     // Function to completely clear all message data
     function clearAllMessages() {
       // Clear the DOM elements
@@ -273,6 +440,9 @@
     
     // Initialize the status
     statusElement.textContent = "Ready to receive Morse code signals";
+
+    // Request a clean terminal
+    onClearButtonClickHandler();
   </script>
 </body>
 </html>

@@ -74,57 +74,80 @@ void MorseSimulation::initializeMorseDictionary() {
     morseToChar[".--.-."] = '@';
 }
 
-void MorseSimulation::translateMorse(char symbol) {
+void MorseSimulation::addMorseCharacter(char symbol) {
     this->log() << "Translating symbol: " << symbol << endl;
-    
-    // Process according to the symbol
-    if (symbol == '.' || symbol == '-') {
-        // Add to current sequence
+
+    if (currentSequence.size() < 500) // just a limit to avoid someone sending 100,000 symbols
         currentSequence += symbol;
-        this->log() << "Current sequence: " << currentSequence << endl;
-    }
-    else if (symbol == '/') {
-        // Letter space - translate the current sequence
-        if (!currentSequence.empty()) {
-            char translatedChar = '?';
-            
-            // Look up in dictionary
-            if (morseToChar.find(currentSequence) != morseToChar.end()) {
-                translatedChar = morseToChar[currentSequence];
-            }
-            
-            this->log() << "Translated " << currentSequence << " to: " << translatedChar << endl;
-            
-            // Add to translated text
-            this->mState.addTranslatedCharacter(translatedChar);
-            
-            // Reset current sequence
-            currentSequence = "";
-        }
-    }
-    else if (symbol == ' ') {
-        // Word space - translate the current sequence and add a space
-        if (!currentSequence.empty()) {
-            char translatedChar = '?';
-            
-            // Look up in dictionary
-            if (morseToChar.find(currentSequence) != morseToChar.end()) {
-                translatedChar = morseToChar[currentSequence];
-            }
-            
-            this->log() << "Translated " << currentSequence << " to: " << translatedChar << endl;
-            
-            // Add to translated text
-            this->mState.addTranslatedCharacter(translatedChar);
-            
-            // Reset current sequence
-            currentSequence = "";
-        }
+
+    string translated = "";
+    string currentCharacter = "";
+
+    for (char symbol : currentSequence) {
+        switch(symbol) {
+            case '.':
+            case '-':
+                currentCharacter += symbol;
+                break;
+            case '/': // end of letter
+                {
+                    char translatedChar = '?';
+                
+                    if (!currentCharacter.empty()) {
+                        // Look up in dictionary
+                        if (morseToChar.find(currentCharacter) != morseToChar.end()) {
+                            translatedChar = morseToChar[currentCharacter];
+                        }
+                        
+                        this->log() << "Translated " << currentCharacter << " to: " << translatedChar << endl;
         
-        // Add space
-        this->mState.addTranslatedCharacter(' ');
+                        translated += translatedChar;
+                    }
+
+                    currentCharacter = "";
+                }
+                break;
+            case ' ':
+                {
+                    char translatedChar = '?';
+
+                    if (!currentCharacter.empty()) {
+                        // Look up in dictionary
+                        if (morseToChar.find(currentCharacter) != morseToChar.end()) {
+                            translatedChar = morseToChar[currentCharacter];
+                        }
+                    
+                        this->log() << "Translated " << currentCharacter << " to: " << translatedChar << endl;
+                        translated += translatedChar;
+                    }
+
+                    // do not start with just a space
+                    if (translated.size() > 0)
+                        translated += ' ';
+
+                    currentCharacter = "";
+                }
+                break;
+            default:
+                break;
+        }
     }
+
+    if (!currentCharacter.empty()) {
+        char translatedChar = '?';
+    
+        // Look up in dictionary
+        if (morseToChar.find(currentCharacter) != morseToChar.end()) {
+            translatedChar = morseToChar[currentCharacter];
+        }
+        translated += translatedChar;
+    }
+    
+    this->log() << "Translated sentence from: '" << currentSequence << "' to '" << translated << "'" << endl;
+
+    this->mState.replaceWithPhrase(translated);
 }
+
 
 void MorseSimulation::initialize(){
     this->targetDevice->initializeSimulation({}, {"morseSignal"});
@@ -140,20 +163,20 @@ void MorseSimulation::updateSpeedThresholds(char speed) {
         case 'F': // Fast
             DOT_THRESHOLD = 0.1;    // 0.1 seconds
             DASH_THRESHOLD = 0.3;  // 0.3 seconds
-            LETTER_SPACE = 0.7;     // 0.7 seconds
-            WORD_SPACE = 1.0;       // 1.0 seconds
+            LETTER_SPACE = 0.1;     // 0.1 seconds
+            WORD_SPACE = 0.3;       // 0.3 seconds
             break;
         case 'N': // Normal
             DOT_THRESHOLD = 1.0;    // 1.0 seconds
-            DASH_THRESHOLD = 2.0;   // 2.0 seconds
-            LETTER_SPACE = 2.0;     // 2.0 seconds
-            WORD_SPACE = 4.0;       // 4.0 seconds
+            DASH_THRESHOLD = 1.5;   // 1.5 seconds
+            LETTER_SPACE = 1.0;     // 1.0 seconds
+            WORD_SPACE = 2.0;       // 2.0 seconds
             break;
         case 'S': // Slow
             DOT_THRESHOLD = 3.0;    // 2.0 seconds
             DASH_THRESHOLD = 5.0;   // 3.0 seconds
-            LETTER_SPACE = 4.0;     // 4.0 seconds
-            WORD_SPACE = 8.0;       // 8.0 seconds
+            LETTER_SPACE = 3.0;     // 3.0 seconds
+            WORD_SPACE = 5.0;       // 5.0 seconds
             break;
     }
     
@@ -171,20 +194,16 @@ void MorseSimulation::interpretSignal(bool isHigh, double duration) {
     if (isHigh) {
         // Signal was high (mark)
         if (duration < DOT_THRESHOLD) {
-            this->mState.addCharacter('.'); // Dot
-            translateMorse('.');
+            addMorseCharacter('.');
         } else {
-            this->mState.addCharacter('-'); // Dash
-            translateMorse('-');
+            addMorseCharacter('-');
         }
     } else {
         // Signal was low (space)
         if (duration > WORD_SPACE) {
-            this->mState.addCharacter(' '); // Word space
-            translateMorse(' ');
+            addMorseCharacter(' ');
         } else if (duration > LETTER_SPACE) {
-            this->mState.addCharacter('/'); // Letter space
-            translateMorse('/');
+            addMorseCharacter('/');
         }
     }
 }
