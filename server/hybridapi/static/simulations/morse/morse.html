@@ -274,9 +274,8 @@
       
       statusElement.textContent = `Speed set to ${selectedSpeed} at ${new Date().toLocaleTimeString()}`;
     });
-    
-    // Clear button click handler with immediate auto-restore
-    clearButtonElement.addEventListener("click", function() {
+
+    var onClearButtonClickHandler = function() {
       // Get current speed
       const currentSpeed = speedSelectElement.value;
       
@@ -307,7 +306,10 @@
         // Update status
         statusElement.textContent = `Ready to receive at ${new Date().toLocaleTimeString()}`;
       }, 500);
-    });
+    }
+    
+    // Clear button click handler with immediate auto-restore
+    clearButtonElement.addEventListener("click", onClearButtonClickHandler);
     
     // Process incoming messages from parent
     window.addEventListener("message", (event) => {
@@ -438,6 +440,9 @@
     
     // Initialize the status
     statusElement.textContent = "Ready to receive Morse code signals";
+
+    // Request a clean terminal
+    onClearButtonClickHandler();
   </script>
 </body>
 </html>
