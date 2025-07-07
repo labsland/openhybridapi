@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | WatertankDeusto</title>
+    <title>Unity WebGL Player | CarWiper</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
   </head>
@@ -20,7 +20,7 @@
       <div id="unity-footer">
         <div id="unity-webgl-logo"></div>
         <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">WatertankDeusto</div>
+        <div id="unity-build-title">CarWiper</div>
       </div>
     </div>
     <script>
@@ -56,14 +56,14 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/WatertankDeusto.loader.js";
+      var loaderUrl = buildUrl + "/CarWiperDeusto2Bit.loader.js";
       var config = {
-        dataUrl: buildUrl + "/WatertankDeusto.data.gz",
-        frameworkUrl: buildUrl + "/WatertankDeusto.framework.js.gz",
-        codeUrl: buildUrl + "/WatertankDeusto.wasm.gz",
+        dataUrl: buildUrl + "/CarWiperDeusto2Bit.data.gz",
+        frameworkUrl: buildUrl + "/CarWiperDeusto2Bit.framework.js.gz",
+        codeUrl: buildUrl + "/CarWiperDeusto2Bit.wasm.gz",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "Giovanna",
-        productName: "WatertankDeusto",
+        productName: "CarWiper",
         productVersion: "0.1",
         showBanner: unityShowBanner,
       };
@@ -109,15 +109,16 @@
           fullscreenButton.onclick = () => {
             unityInstance.SetFullscreen(1);
           };
-          function handleMessage(message) {
-          unityInstance.SendMessage("watertank", "UpdateWatertank", message);
-        }
-        window.addEventListener("message", function (event) {
-          if (event.data.messageType == "sim2web") {
-            handleMessage(event.data.value);
-          }
+          
+          window.addEventListener("message", function (event) {
+            if (event.data.messageType == "sim2web") {
+              handleMessage(event.data.value);
+            }
+          }, false);
 
-        }, false);
+          function handleMessage(message) {
+            unityInstance.SendMessage("Screen", "UpdateWiper", message);
+          }
         }).catch((message) => {
           alert(message);
         });
@@ -126,12 +127,12 @@
     </script>
     <script>
       function handleMessageFromUnity(textMessage) {
-          console.log("mes unity: "+ textMessage);
-          parent.postMessage({
-            messageType: "web2sim",
-            version: "1.0",
-            value: textMessage
-          }, '*');
+        console.log("mess unity: "+ textMessage);
+        parent.postMessage({
+          messageType: "web2sim",
+          version: "1.0",
+          value: textMessage
+        }, '*');
       }
     </script>
   </body>
