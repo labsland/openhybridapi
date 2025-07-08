@@ -10,9 +10,9 @@
 aws s3 sync --region eu-central-1 watertankDeustoTemperature s3://ll-static-apps/simulations/watertankDeustoTemperature
 
 
-aws s3 cp --region eu-central-1 watertankDeustoTemperature/Build/watertankDeustoTemperature.data.gz s3://ll-static-apps/simulations/watertankDeustoTemperature/Build/watertankDeustoTemperature.data.gz --content-encoding gzip --metadata-directive REPLACE
-aws s3 cp --region eu-central-1 watertankDeustoTemperature/Build/watertankDeustoTemperature.framework.js.gz s3://ll-static-apps/simulations/watertankDeustoTemperature/Build/watertankDeustoTemperature.framework.js.gz --content-encoding gzip --metadata-directive REPLACE
-aws s3 cp --region eu-central-1 watertankDeustoTemperature/Build/watertankDeustoTemperature.wasm.gz s3://ll-static-apps/simulations/watertankDeustoTemperature/Build/watertankDeustoTemperature.wasm.gz --content-encoding gzip --metadata-directive REPLACE
+aws s3 cp --region eu-central-1 watertankDeustoTemperature/Build/WatertankDeustoTemperature.data.gz s3://ll-static-apps/simulations/watertankDeustoTemperature/Build/WatertankDeustoTemperature.data.gz --content-encoding gzip --metadata-directive REPLACE
+aws s3 cp --region eu-central-1 watertankDeustoTemperature/Build/WatertankDeustoTemperature.framework.js.gz s3://ll-static-apps/simulations/watertankDeustoTemperature/Build/WatertankDeustoTemperature.framework.js.gz --content-encoding gzip --metadata-directive REPLACE
+aws s3 cp --region eu-central-1 watertankDeustoTemperature/Build/WatertankDeustoTemperature.wasm.gz s3://ll-static-apps/simulations/watertankDeustoTemperature/Build/WatertankDeustoTemperature.wasm.gz --content-encoding gzip --metadata-directive REPLACE
 
 
 # Invalidate cloudfront cache.
