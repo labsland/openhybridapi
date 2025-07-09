@@ -6,7 +6,7 @@ void WiperDeustoSimulation::initialize()
 {
 
     this->targetDevice->initializeSimulation(
-        {"rainSensor", "rightSensor", "leftSensor", "resetButton", "mButton", "pButton", "uButton", "aButton"},
+        {"rainSensor", "rightSensor", "leftSensor", "mButton", "pButton"},
         {"move"});
 
     setReportWhenMarked(true);
@@ -31,11 +31,8 @@ void WiperDeustoSimulation::update(double delta)
         this->targetDevice->setGpio("rainSensor", request.rainSensor);
         this->targetDevice->setGpio("rightSensor", request.rightSensor);
         this->targetDevice->setGpio("leftSensor", request.leftSensor);
-        this->targetDevice->setGpio("resetButton", request.resetButton);
         this->targetDevice->setGpio("mButton", request.mButton);
         this->targetDevice->setGpio("pButton", request.pButton);
-        this->targetDevice->setGpio("uButton", request.uButton);
-        this->targetDevice->setGpio("aButton", request.aButton);
     }
 
     requestReportState();

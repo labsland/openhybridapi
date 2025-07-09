@@ -5,6 +5,6 @@ iframe:
   height: 700
 gpios:
   sim2dut:
-    labels: [ rainSensor, rightSenson,  leftSensor, resetButton, mButton, pButton, uButton, aButton ]
+    labels: [ rainSensor, rightSenson,  leftSensor, mButton, pButton ]
   dut2sim:
     labels: [ move ]

@@ -25,11 +25,8 @@ struct WiperDeustoRequest : public BaseInputDataType
     bool rainSensor;
     bool leftSensor;
     bool rightSensor;
-    bool resetButton;
     bool mButton;
     bool pButton;
-    bool uButton;
-    bool aButton;
 
 
     bool deserialize(std::string const &input)
@@ -43,18 +40,15 @@ struct WiperDeustoRequest : public BaseInputDataType
             segments.push_back(segment);
         }
 
-        if (segments.size() != 8) {
+        if (segments.size() != 5) {
             return false;
         }
 
         rainSensor = (segments[0] == "1");
         leftSensor = (segments[1] == "1");
         rightSensor = (segments[2] == "1");
-        resetButton = (segments[3] == "1");
-        mButton = (segments[4] == "1");
-        pButton = (segments[5] == "1");
-        uButton = (segments[6] == "1");
-        aButton = (segments[7] == "1");
+        mButton = (segments[3] == "1");
+        pButton = (segments[4] == "1");
 
         return true;
     }
