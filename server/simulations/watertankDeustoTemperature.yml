@@ -1,0 +1,10 @@
+name: Watertank
+description: This is a watertank simulation
+iframe:
+  url: watertankDeustoTemperature/index.html
+  height: 700
+gpios:
+  sim2dut:
+    labels: [ lowSensor, midSensor, highSensor, pump1Hot, pump2Hot ]
+  dut2sim:
+    labels: [ pump1Bit0, pump1Bit1, pump2Bit0, pump2Bit1 ]

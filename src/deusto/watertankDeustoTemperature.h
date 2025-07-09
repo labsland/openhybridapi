@@ -1,0 +1,87 @@
+ #ifndef HYBRIDAPI_WATERTANKDEUSTO_TEMPERATURE_H
+ #define HYBRIDAPI_WATERTANKDEUSTO_TEMPERATURE_H
+ 
+ #include "../labsland/simulations/simulation.h"
+ #include <string>
+ #include <sstream>
+ #include <vector>
+ #include <algorithm>
+ 
+ struct WatertankDeustoTemperatureData : public BaseOutputDataType {
+ 
+     float level;
+     float totalVolume;
+     float volume;
+     bool pump1ActiveBit0;
+     bool pump1ActiveBit1;
+     bool pump2ActiveBit0;
+     bool pump2ActiveBit1;
+     float pump1Temperature;
+     float pump2Temperature;
+     float currentLoad;
+     bool lowSensorActive;
+     bool midSensorActive;
+     bool highSensorActive;
+     bool pump1Hot;
+     bool pump2Hot;
+     bool pump1Broken;
+     bool pump2Broken;
+
+     std::string serialize() const {
+         std::stringstream stream;
+         stream << level << "&" << pump1ActiveBit0 << pump1ActiveBit1 << "&" << pump2ActiveBit0 << pump2ActiveBit1 << "&" <<
+             pump1Temperature << "&" << pump2Temperature << "&" << lowSensorActive << "&" <<
+             midSensorActive << "&" << highSensorActive << "&"<< pump1Hot << "&" << pump2Hot << "&" <<
+             pump1Broken << "&" << pump2Broken << "&";
+         return stream.str();
+     }
+ };
+ 
+ struct WatertankDeustoTemperatureRequest : public BaseInputDataType {
+     float outputFlow;
+     bool makeError;
+     bool resetError;
+     bool deserialize(std::string const & input) {
+        std::string data = input;
+        std::replace(data.begin(), data.end(), '&', ' ');
+        std::replace(data.begin(), data.end(), ',', '.');
+        std::stringstream stream(data);
+        int errorInt, resetInt;
+        if (!(stream >> outputFlow >> errorInt >> resetInt)) {
+            return false; 
+        }
+        makeError = (errorInt != 0);
+        resetError = (resetInt != 0) && !makeError;
+
+        return true;
+    }
+ };
+ 
+
+ class WatertankDeustoTemperatureSimulation : public Simulation<WatertankDeustoTemperatureData, WatertankDeustoTemperatureRequest> {
+ private:
+ 
+     const float WATERTANK_HEIGHT = 6.0f;
+     const float WATERTANK_DIAMETER = 4.0f;
+ 
+     const float PUMP1_FLOWRATE = 2000;
+     const float PUMP2_FLOWRATE = 2000;
+ 
+     float mCurrentDemandFlowrate = 0;
+     int error[4][3] = {{ 0, 1, 0 },{ 1, 0, 0 },{ 1, 0, 1 },{ 1, 1, 0 }};
+     bool makeError = false;
+     bool resetError = false;
+     bool isBroken = false;
+ 
+ public:
+ 
+     WatertankDeustoTemperatureSimulation() = default;
+ 
+     virtual void update(double delta) override;
+ 
+     virtual void initialize() override;
+ };
+ 
+ 
+ #endif
+ 

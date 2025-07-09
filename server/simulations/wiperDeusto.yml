@@ -1,0 +1,10 @@
+name: Wiper
+description: This is a wiper simulation
+iframe:
+  url: wiperDeusto/index.html
+  height: 700
+gpios:
+  sim2dut:
+    labels: [ rainSensor, rightSenson,  leftSensor, mButton, pButton ]
+  dut2sim:
+    labels: [ move ]

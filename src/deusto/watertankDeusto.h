@@ -22,17 +22,12 @@
      bool lowSensorActive;
      bool midSensorActive;
      bool highSensorActive;
-     bool pump1Hot;
-     bool pump2Hot;
-     bool pump1Broken;
-     bool pump2Broken;
 
      std::string serialize() const {
          std::stringstream stream;
-         stream << level << "&" << totalVolume << "&" << volume << "&" << pump1ActiveBit0 << pump1ActiveBit1 << "&" << pump2ActiveBit0 << pump2ActiveBit1 << "&" <<
-             pump1Temperature << "&" << pump2Temperature << "&" << currentLoad << "&" << lowSensorActive << "&" <<
-             midSensorActive << "&" << highSensorActive << "&"<< pump1Hot << "&" << pump2Hot << "&" <<
-             pump1Broken << "&" << pump2Broken << "&";
+         stream << level << "&" << pump1ActiveBit0 << pump1ActiveBit1 << "&" << pump2ActiveBit0 << pump2ActiveBit1 << "&" <<
+             pump1Temperature << "&" << pump2Temperature << "&" << lowSensorActive << "&" <<
+             midSensorActive << "&" << highSensorActive << "&";
          return stream.str();
      }
  };
@@ -68,7 +63,8 @@
      const float PUMP2_FLOWRATE = 2000;
  
      float mCurrentDemandFlowrate = 0;
-
+     
+     int error[4][3] = {{ 0, 1, 0 },{ 1, 0, 0 },{ 1, 0, 1 },{ 1, 1, 0 }};
      bool makeError = false;
      bool resetError = false;
      bool isBroken = false;

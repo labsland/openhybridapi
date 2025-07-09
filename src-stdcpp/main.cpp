@@ -14,6 +14,9 @@
 #include "rhlab/morse.h"
 #include "deusto/door.h"
 #include "deusto/watertankDeusto.h"
+#include "deusto/watertankDeustoTemperature.h"
+#include "deusto/wiperDeusto.h"
+#include "deusto/wiper2BitDeusto.h"
 #include "labsland/simulations/utils/communicatorfiles.h"
 #include "labsland/simulations/targetdevicefiles.h"
 #include "labsland/utils/timemanagerstd.h"
@@ -116,6 +119,12 @@ int main(int argc, char * argv[]) {
         runner = new ConcreteSimulationRunner<DoorSimulation, DoorData, DoorRequest>(configuration, mode);
     } else if (simulation == "watertankDeusto") {
         runner = new ConcreteSimulationRunner<WatertankDeustoSimulation, WatertankDeustoData, WatertankDeustoRequest>(configuration, mode);
+    } else if (simulation == "watertankDeustoTemperature") {
+        runner = new ConcreteSimulationRunner<WatertankDeustoTemperatureSimulation, WatertankDeustoTemperatureData, WatertankDeustoTemperatureRequest>(configuration, mode);
+    }else if (simulation == "wiperDeusto") {
+        runner = new ConcreteSimulationRunner<WiperDeustoSimulation, WiperDeustoData, WiperDeustoRequest>(configuration, mode);
+    }else if (simulation == "wiper2BitDeusto") {
+        runner = new ConcreteSimulationRunner<Wiper2BitDeustoSimulation, Wiper2BitDeustoData, Wiper2BitDeustoRequest>(configuration, mode);
     } else if (simulation == "morse") {
         runner = new ConcreteSimulationRunner< RHLab::Morse::MorseSimulation, RHLab::Morse::MorseData, RHLab::Morse::MorseRequest>(configuration, mode);
     }
