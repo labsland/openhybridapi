@@ -114,17 +114,7 @@
           if (segments.length < 2) {
             return;
           }
-          if (segments[0] === "1" && segments[1] === "0") {
-            unityInstance.SendMessage("enviroment", "OpenDoor");
-          }
-
-          if (segments[0] === "0" && segments[1] === "1") {
-            unityInstance.SendMessage("enviroment", "CloseDoor");
-          }
-
-          if (segments[0] === "1" && segments[1] === "1") {
-            unityInstance.SendMessage("enviroment", "WrongSignal");
-          }
+          unityInstance.SendMessage("enviroment", "UpdateDoor",message);
         }
 
         // Escucha los mensajes enviados desde el servidor

@@ -12,21 +12,21 @@
 
 using namespace LabsLand::Utils;
 
-void TimeManagerStd::sleepMs(uint32_t ms) {
+void TimeManagerStd::sleepMs(uint32_t ms) const {
     std::this_thread::sleep_for (std::chrono::milliseconds(ms));
 }
 
-void TimeManagerStd::sleepUs(uint32_t us) {
+void TimeManagerStd::sleepUs(uint32_t us) const {
     std::this_thread::sleep_for (std::chrono::microseconds(us));
 }
 
-LabsLand::Utils::clock_t TimeManagerStd::getAbsoluteTime() {
+LabsLand::Utils::clock_t TimeManagerStd::getAbsoluteTime() const {
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
     return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 }
 
-uint64_t TimeManagerStd::getClocksPerSec() {
+uint64_t TimeManagerStd::getClocksPerSec() const {
     // Should be CLOCKS_PER_SEC
     return 1000;
 }

@@ -47,17 +47,16 @@ TargetDeviceFiles::~TargetDeviceFiles() {
         delete this->secondI2cIoWrapper;
 }
 
-bool TargetDeviceFiles::checkSimulationSupport(TargetDeviceConfiguration * configuration) {
+bool TargetDeviceFiles::checkSimulationSupport(shared_ptr<TargetDeviceConfiguration> configuration) {
     return configuration->getOutputGpios() <= this->numberOfOutputs && configuration->getInputGpios() <= this->numberOfInputs;
 }
 
-bool TargetDeviceFiles::initializeSimulation(TargetDeviceConfiguration * configuration) {
+bool TargetDeviceFiles::initializeSimulation(shared_ptr<TargetDeviceConfiguration> configuration) {
     if (!checkSimulationSupport(configuration))
         return false;
 
     this->numberOfSimulationOutputs = configuration->getOutputGpios();
     this->numberOfSimulationInputs = configuration->getInputGpios();
-    this->configuration = configuration;
 
     // Initialize the output GPIO file
     ofstream ofile(this->outputGpioFilename);

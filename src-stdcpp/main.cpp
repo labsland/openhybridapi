@@ -10,6 +10,8 @@
 #include <chrono>
 #include "labsland/simulations/watertanksimulation.h"
 #include "rhlab/butterfly.h"
+#include "rhlab/matrix.h"
+#include "rhlab/morse.h"
 #include "deusto/door.h"
 #include "deusto/watertankDeusto.h"
 #include "deusto/watertankDeustoTemperature.h"
@@ -36,12 +38,12 @@ class ConcreteSimulationRunner : public SimulationRunner {
         ConcreteSimulationRunner(const string & config, const string & mode): configuration(config), mode(mode) {}
 
         void run() {
-            auto timeManager = new LabsLand::Utils::TimeManagerStd();
-            LabsLand::Utils::TargetDevice * targetDevice = 0;
-            SimulationCommunicator<OutputDataType, InputDataType> * communicator;
+            shared_ptr<LabsLand::Utils::TimeManager> timeManager = make_shared<LabsLand::Utils::TimeManagerStd>();
+            shared_ptr<LabsLand::Utils::TargetDevice> targetDevice = nullptr;
+            shared_ptr<SimulationCommunicator<OutputDataType, InputDataType>> communicator = nullptr;
             if (configuration == "files") {
-                targetDevice = new LabsLand::Utils::TargetDeviceFiles(20, 10);
-                communicator = new SimulationCommunicatorFiles<OutputDataType, InputDataType>("output-messages.txt", "input-messages.txt");
+                targetDevice = make_shared<LabsLand::Utils::TargetDeviceFiles>(20, 10);
+                communicator = make_shared<SimulationCommunicatorFiles<OutputDataType, InputDataType>>("output-messages.txt", "input-messages.txt");
             } else {
                 // Add here other implementations
                 cerr << "Unsupported configuration: " << configuration << endl;
@@ -105,10 +107,14 @@ int main(int argc, char * argv[]) {
 
     SimulationRunner * runner = 0;
 
-    if (simulation == "watertank") {
+    if (simulation == "matrix") {
+        runner = new ConcreteSimulationRunner<RHLab::LEDMatrix::MatrixSimulation, RHLab::LEDMatrix::MatrixData, RHLab::LEDMatrix::MatrixRequest>(configuration, mode);
+    } else if (simulation == "watertank") {
         runner = new ConcreteSimulationRunner<WatertankSimulation, WatertankData, WatertankRequest>(configuration, mode);
-    } else if (simulation == "butterfly") {
-        runner = new ConcreteSimulationRunner<ButterflySimulation, ButterflyData, ButterflyRequest>(configuration, mode);
+    } else if (simulation == "butterfly" || simulation == "butterfly-fpga-de1-soc" || simulation == "butterfly-fpga-de2-115") {
+        runner = new ConcreteSimulationRunner<FPGA_DE1SoC_ButterflySimulation, ButterflyData, ButterflyRequest>(configuration, mode);
+    } else if (simulation == "butterfly-stm32-wb55rg") {
+        runner = new ConcreteSimulationRunner<STM32_WB55RG_ButterflySimulation, ButterflyData, ButterflyRequest>(configuration, mode);
     } else if (simulation == "door") {
         runner = new ConcreteSimulationRunner<DoorSimulation, DoorData, DoorRequest>(configuration, mode);
     } else if (simulation == "watertankDeusto") {
@@ -119,7 +125,10 @@ int main(int argc, char * argv[]) {
         runner = new ConcreteSimulationRunner<WiperDeustoSimulation, WiperDeustoData, WiperDeustoRequest>(configuration, mode);
     }else if (simulation == "wiper2BitDeusto") {
         runner = new ConcreteSimulationRunner<Wiper2BitDeustoSimulation, Wiper2BitDeustoData, Wiper2BitDeustoRequest>(configuration, mode);
-    }else {
+    } else if (simulation == "morse") {
+        runner = new ConcreteSimulationRunner< RHLab::Morse::MorseSimulation, RHLab::Morse::MorseData, RHLab::Morse::MorseRequest>(configuration, mode);
+    }
+    else {
         cerr << "Invalid simulation: '" << simulation << "'. Use a valid name" << endl;
         return 2;
     }

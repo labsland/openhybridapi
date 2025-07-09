@@ -38,7 +38,7 @@
     <div>
 	</div>
     <div>
-        <img src="static/resources/images/de1_pinout_info.png" width=400px style="float:left;">
+        <img id="device-info" src="" width="400px" style="float:left;">
         <img src="static/resources/images/logic_gates_pinout_square.png" width=400px style="float:left;">
     </div>
 
@@ -47,6 +47,20 @@
     <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
 
     <script>
+        var params = new URLSearchParams(window.location.search);
+        window.DEVICE_ID = params.get('device');
+        if (window.DEVICE_ID !== "fpga-de1-soc" && window.DEVICE_ID !== "fpga-de2-115" && window.DEVICE_ID !== "stm32-wb55rg") {
+            window.DEVICE_ID = "fpga-de1-soc";
+        }
+
+        if (window.DEVICE_ID == "fpga-de1-soc") {
+            $("#device-info").attr("src", "static/resources/images/de1_pinout_info.png");
+        } else if (window.DEVICE_ID == "stm32-wb55rg") {
+            $("#device-info").attr("src", "static/resources/images/stm32_wb55rg_pinout.jpg");
+            $("#device-info").attr("width", "700px");
+
+        }
+
         function injectScript(src) {
             var def = $.Deferred();
             var head=document.getElementsByTagName('head')[0];

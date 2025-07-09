@@ -1,7 +1,7 @@
 /****************************************************
- * Author: Matt Guo
+ * Authors: Matt Guo (main contributor), Pablo Orduna
  * Name: breadboard-visir.js
- * Affiliation: Remote Hub Lab
+ * Affiliations: Remote Hub Lab, LabsLand
  * Functionality: The javascript backend for the Flask breadboard GUI,
  * handling the client functionality. Breadboard components contain:
  * switches, not gate, and gate, and or gates. Breadboard.Update() contains
@@ -28,6 +28,56 @@ if(typeof(RHLab) === "undefined") {
 if(typeof(RHLab.Widgets) === "undefined") {
     RHLab.Widgets = {};
 }
+
+
+window.DEVICE_DATA = {
+    "fpga-de1-soc": {
+        outputs_by_pin: {
+            31: 'GPIO26', // GPIO26
+            32: 'GPIO27', // GPIO27
+            37: 'GPIO32',
+            39: 'GPIO34',
+            36: 'GPIO31',
+            38: 'GPIO33',
+            40: 'GPIO35',
+        },
+        outputs_by_pin_array: [31, 32, 37, 39, 36, 38, 40],
+        inputs_by_pin: {
+            33: 'GPIO28',  // GPIO6 //PC1
+            34: 'GPIO29',  // GPIO7
+            35: 'GPIO30',  // GPIO30
+            26: 'GPIO23',  // GPIO8
+            27: 'GPIO24',  // GPIO9
+        },
+        inputs_by_pin_array: [33, 34, 35, 26, 27],
+        image: "de1_soc_connection.png",
+        connectorName: "JP1"
+    },
+    "stm32-wb55rg": {
+        outputs_by_pin: {
+            1:  "PC4",
+            36: "PD0",
+            38: "PD1",
+            22: "PB0",
+            24: "PB1",
+            26: "PB15"
+        },
+        outputs_by_pin_array: [1, 36, 38, 22, 24, 26],
+        inputs_by_pin: {
+            23: "PC13",
+            13: "PA6",
+            4:  "PB9",
+            3:  "PB8",
+            21: "C12"
+        },
+        inputs_by_pin_array: [23, 13, 4, 3, 21],
+        image: "stm32_wb55rg_cn10.png",
+        connectorName: "CN10"
+    }
+};
+
+window.DEVICE_DATA["fpga-de2-115"] = window.DEVICE_DATA["fpga-de1-soc"];
+
 // Initialize the Breadboard container in the RHLab JSON package
 RHLab.Widgets.Breadboard = function() {
 
@@ -41,16 +91,8 @@ RHLab.Widgets.Breadboard = function() {
     //     32: 'V_LED1', // GPIO27
     // };
 
-    var OUTPUTS_BY_PIN = {
-        31: 'GPIO26', // GPIO26
-        32: 'GPIO27', // GPIO27
-        37: 'GPIO32',
-        39: 'GPIO34',
-        36: 'GPIO31',
-        38: 'GPIO33',
-        40: 'GPIO35',
-    };
-    var OUTPUTS_BY_PIN_ARRAY = [31, 32, 37, 39, 36, 38, 40];
+    var OUTPUTS_BY_PIN = window.DEVICE_DATA[window.DEVICE_ID]["outputs_by_pin"];
+    var OUTPUTS_BY_PIN_ARRAY = window.DEVICE_DATA[window.DEVICE_ID]["outputs_by_pin_array"];
 
     // // Define the inputs from the 40-pin GPIO for the DE1-SoC
     // var INPUTS_BY_PIN = {
@@ -75,14 +117,8 @@ RHLab.Widgets.Breadboard = function() {
     // };
 
     // Define the inputs from the 40-pin GPIO for the DE1-SoC
-    var INPUTS_BY_PIN = {
-        33: 'GPIO28',  // GPIO6 //PC1
-        34: 'GPIO29',  // GPIO7
-        35: 'GPIO30',  // GPIO30
-        26: 'GPIO23',  // GPIO8
-        27: 'GPIO24',  // GPIO9
-    };
-    var INPUTS_BY_PIN_ARRAY = [33, 34, 35, 26, 27];
+    var INPUTS_BY_PIN = window.DEVICE_DATA[window.DEVICE_ID]["inputs_by_pin"];
+    var INPUTS_BY_PIN_ARRAY = window.DEVICE_DATA[window.DEVICE_ID]["inputs_by_pin_array"];
 
     // Function called by template.html for flask that initalizes a <div> for the breadboard
     function Breadboard($element, endpointBase, numberOfSwitches, imageBase, enableNetwork) {
@@ -588,11 +624,10 @@ RHLab.Widgets.Breadboard = function() {
             this.AddComponent(switchComponent);
         }
         
-        // var jp1Image = this._imageBase + "connections_40.png";
-        // var jp1 = new Breadboard.Component('JP1', 221, 22, jp1Image, null, 0);
-        var jp1Image = this._imageBase + "de1_soc_connection.png";
-        var jp1 = new Breadboard.Component('JP1', 192, 13, jp1Image, null, 0);
-        this.AddComponent(jp1);
+        var connectorImage = this._imageBase + window.DEVICE_DATA[window.DEVICE_ID].image;
+        var connectorName = window.DEVICE_DATA[window.DEVICE_ID].connectorName;
+        var connector = new Breadboard.Component(connectorName, 192, 13, connectorImage, null, 0);
+        this.AddComponent(connector);
     }
 
     // Add a new component onto the breadboard, send it to the HTML
@@ -1112,6 +1147,7 @@ RHLab.Widgets.Breadboard = function() {
             // check input:
             // - check if output of FPGA, inputs to logic gate
             var gpioPin = finder.FindGpioPin(point1);
+            console.log("GPIOPIN:", gpioPin, INPUTS_BY_PIN[gpioPin], OUTPUTS_BY_PIN[gpioPin]);
             var isVirtualInput = INPUTS_BY_PIN[gpioPin] !== undefined;
             var point1Code = "";
             if(isVirtualInput){
@@ -1344,6 +1380,7 @@ RHLab.Widgets.Breadboard = function() {
             // check input:
             // - check if output of FPGA, inputs to logic gate
             gpioPin = finder.FindGpioPin(point2);
+            console.log("GPIOPIN:", gpioPin, INPUTS_BY_PIN[gpioPin], OUTPUTS_BY_PIN[gpioPin]);
             isVirtualInput = INPUTS_BY_PIN[gpioPin] !== undefined;
             if(isVirtualInput){
                 // gpioPin = Object.keys(INPUTS_BY_PIN).indexOf(gpioPin.toString());
@@ -1821,6 +1858,7 @@ RHLab.Widgets.Breadboard = function() {
                 console.log(ERROR_MESSAGES["null"]);
             }
 
+            console.log(point1IsOutput, point2IsOutput);
             if(!point1IsOutput && point2IsOutput){
                 // virtual input connection to virtual output -> VALID
                 inputPoint = point1;

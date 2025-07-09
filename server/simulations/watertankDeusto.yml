@@ -1,7 +1,7 @@
 name: Watertank
 description: This is a watertank simulation
 iframe:
-  url: watertankDeusto/index.html
+  url: https://static-apps.labsland.com/simulations/watertankDeusto/index.html
   height: 700
 gpios:
   sim2dut:

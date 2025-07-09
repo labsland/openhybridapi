@@ -164,7 +164,7 @@ def gpios_dut2sim(number: Optional[int]):
         return jsonify(success=False, message="Invalid 'value' provided in json"), 400
 
     content_as_list = list(content)
-    content_as_list[number] = '1' if value else '0'
+    content_as_list[number] = '1' if value in (True, 1, '1', 'true', 'True', 'TRUE') else '0'
     content = ''.join(content_as_list)
 
     if os.path.exists(dut2sims_gpios):

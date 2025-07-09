@@ -1,0 +1,14 @@
+name: Butterfly
+description: This is a Breadboard of a DE1-SoC
+iframe:
+  url: butterfly/butterfly.html?device=stm32-wb55rg
+  height: 500
+gpios:
+  sim2dut:
+    # STM32 inputs
+    # number: 5
+    labels: [ PC13, PA6, PB9, PB8, PC12 ]
+  dut2sim:
+    # STM32 outputs
+    # number: 6
+    labels: [ PC4, PD0, PD1, PB0, PB1, PB15 ]

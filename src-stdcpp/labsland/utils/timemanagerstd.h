@@ -15,15 +15,15 @@ namespace LabsLand::Utils {
     class TimeManagerStd : public TimeManager {
         public:
             // sleep a number of milliseconds
-            virtual void sleepMs(uint32_t ms);
+            virtual void sleepMs(uint32_t ms) const override;
 
             // sleep a number of microseconds
-            virtual void sleepUs(uint32_t us);
+            virtual void sleepUs(uint32_t us) const override;
 
             // get time since boot in microseconds
-            virtual clock_t getAbsoluteTime();
+            virtual clock_t getAbsoluteTime() const override;
 
-            virtual uint64_t getClocksPerSec();
+            virtual uint64_t getClocksPerSec() const override;
     };
 
 }

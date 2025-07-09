@@ -47,6 +47,12 @@
     <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
 
     <script>
+        var params = new URLSearchParams(window.location.search);
+        window.DEVICE_ID = params.get('device');
+        if (window.DEVICE_ID !== "fpga-de1-soc" && window.DEVICE_ID !== "fpga-de2-115" && window.DEVICE_ID !== "stm32-wb55rg") {
+            window.DEVICE_ID = "fpga-de1-soc";
+        }
+
         function injectScript(src) {
             var def = $.Deferred();
             var head=document.getElementsByTagName('head')[0];

@@ -1,0 +1,10 @@
+name: Morse
+description: This is a morse simulation
+iframe:
+  url: morse/morse.html
+  height: 700
+gpios:
+  sim2dut:
+    labels: []
+  dut2sim:
+    labels: [morseSignal]

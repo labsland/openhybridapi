@@ -11,6 +11,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <memory>
 
 #include "../utils/timemanager.h"
 #include "utils/communicator.h"
@@ -105,9 +106,9 @@ class Simulation
 
     protected:
 
-        LabsLand::Utils::TimeManager * timeManager = 0;
-        LabsLand::Utils::TargetDevice * targetDevice = 0;
-        LabsLand::Simulations::Utils::SimulationCommunicator<OutputDataType, InputDataType> * communicator = 0;
+        std::shared_ptr<LabsLand::Utils::TimeManager> timeManager = nullptr;
+        std::shared_ptr<LabsLand::Utils::TargetDevice> targetDevice = nullptr;
+        std::weak_ptr<LabsLand::Simulations::Utils::SimulationCommunicator<OutputDataType, InputDataType>> communicator;
         bool mShouldReportInReportWhenMarkedMode = false;
 
         /**
@@ -122,7 +123,10 @@ class Simulation
          * @return if a request has been read.
          */
         bool readRequest(InputDataType &request) {
-            return this->communicator->readRequest(request);
+            if (auto comm = this->communicator.lock()) {
+                return comm->readRequest(request);
+            }
+            return false;
         }
 
         /**
@@ -163,7 +167,8 @@ class Simulation
          * perspective.
          */
         void sendVirtualEnvironmentReport() {
-            this->communicator->sendReport(mState);
+            if (auto comm = this->communicator.lock())
+                comm->sendReport(mState);
         }
 
         /**
@@ -192,7 +197,7 @@ class Simulation
          * The way we handle this is by relying on a TimeManager, and later injecting a Time Manager compatible with
          * the target platform.
          */
-        void injectTimeManager(LabsLand::Utils::TimeManager * timeManager) {
+        void injectTimeManager(std::shared_ptr<LabsLand::Utils::TimeManager> timeManager) {
             this->timeManager = timeManager;
         }
 
@@ -201,20 +206,22 @@ class Simulation
          * communications are very dependant on the implementation. We abstract them in a different
          * class, so we could have implementations in files, network or anything else.
          */
-        void injectCommunicator(LabsLand::Simulations::Utils::SimulationCommunicator<OutputDataType, InputDataType> * communicator) {
+        void injectCommunicator(std::weak_ptr<LabsLand::Simulations::Utils::SimulationCommunicator<OutputDataType, InputDataType>> communicator) {
             this->communicator = communicator;
         }
 
         /**
          * Provide the target device that is going to use in the simulation
          */
-        void injectTargetDevice(LabsLand::Utils::TargetDevice * targetDevice) {
+        void injectTargetDevice(std::shared_ptr<LabsLand::Utils::TargetDevice> targetDevice) {
             this->targetDevice = targetDevice;
         }
 
+        /*
         LabsLand::Simulations::Utils::SimulationCommunicator<OutputDataType, InputDataType> * getCommunicator() {
             return this->communicator;
         }
+        */
 
         /**
          * This internal method is meant to be invoked externally as often as possible, and it is not meant to be

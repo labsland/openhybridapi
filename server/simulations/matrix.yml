@@ -1,0 +1,44 @@
+name: Matrix
+description: This is a simulation of a LED Matrix
+
+iframe:
+  url: "matrix/matrix.html"
+  height: 900
+
+gpios:
+  dut2sim:
+    # FPGA outputs
+    labels: [ latch, pulse, green, red ]
+  
+  sim2dut:
+    labels: []
+
+serial:
+  dut2sim:
+    # A serial communication scheme with numbered latch, pulse, inupt channels, and output channels
+    # There must be a "gpios" section to use this!
+    # Define Data
+    latch: 0 # Start sending data
+    pulse: 1 # Output data is valid
+    inputs: [] # List of GPIO input channels (optional)
+    outputs: [2, 3] # List of GPIO output channels (optional)
+    num_pulses: 256 # The number of pulses per latch
+    # Example File Inputs
+
+    sample_input:
+      url: matrix/
+      samples:
+      # Files must have the following format: "01001001" (or whatever)
+        static: 
+          file: static.txt
+          name: Static
+        bee: 
+          file: bee.txt
+          name: Bee
+  
+  sim2dut:
+    latch: null
+    pulse: null
+    inputs: []
+    outputs: []
+    num_pulses: null

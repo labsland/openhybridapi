@@ -27,11 +27,6 @@ using namespace std;
 #define LED_ARRAY_SIZE      5
 #define MAX_CHAR_ARRAY_SIZE 1024
 
-#define SIM_OUTPUT_GPIO_NUM 5
-#define SIM_INPUT_GPIO_NUM  7
-
-// #define USE_DE1_SOC
-
 // struct that receives the string
 struct ButterflyRequest : public BaseInputDataType {
     char my_string[MAX_CHAR_ARRAY_SIZE];
@@ -74,10 +69,8 @@ class ButterflySimulation : public Simulation<ButterflyData, ButterflyRequest> {
         virtual void update(double delta) override;
         virtual void initialize() override;
 
-        #ifdef USE_DE1_SOC
-        virtual int getNumberOfSimulationInputs(void) = 0;        
+        virtual int getNumberOfSimulationInputs(void) = 0;
         virtual int getNumberOfSimulationOutputs(void) = 0;
-        #endif
 
         void print_gpio_header_states();
         void print_buffer_states();
@@ -96,14 +89,16 @@ class ButterflySimulation : public Simulation<ButterflyData, ButterflyRequest> {
         int read_logic_gate(string substring);
 };
 
-class DE1SoC_ButterflySimulation : public ButterflySimulation {
-     public:
-        int getNumberOfSimulationInputs(void) {
-            return 7;
-        };
-        int getNumberOfSimulationOutputs(void) {
-            return 5;
-        };
+class FPGA_DE1SoC_ButterflySimulation : public ButterflySimulation {
+    public:
+        virtual int getNumberOfSimulationInputs(void) override;
+        virtual int getNumberOfSimulationOutputs(void) override;
+};
+
+class STM32_WB55RG_ButterflySimulation : public ButterflySimulation {
+    public:
+        virtual int getNumberOfSimulationInputs(void) override;
+        virtual int getNumberOfSimulationOutputs(void) override;
 };
 
 #endif

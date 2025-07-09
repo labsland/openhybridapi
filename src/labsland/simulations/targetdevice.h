@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "labsland/protocols.h"
 
@@ -68,7 +69,7 @@ namespace LabsLand::Utils {
 
         protected:
             // Note: the destructor of the target device will destroy this
-            TargetDeviceConfiguration * configuration = 0;
+            std::unique_ptr<TargetDeviceConfiguration> configuration = nullptr;
         public:
             virtual ~TargetDevice();
             /*
@@ -76,7 +77,7 @@ namespace LabsLand::Utils {
              *
              * Note: it does not store configuration
              */
-            virtual bool checkSimulationSupport(TargetDeviceConfiguration * configuration) = 0;
+            virtual bool checkSimulationSupport(std::shared_ptr<TargetDeviceConfiguration> configuration) = 0;
             // simplified version
             virtual bool checkSimulationSupport(int outputGpios, int inputGpios);
 
@@ -88,7 +89,7 @@ namespace LabsLand::Utils {
              *
              * It returns true/false if possible.
              */
-            virtual bool initializeSimulation(TargetDeviceConfiguration * configuration) = 0;
+            virtual bool initializeSimulation(std::shared_ptr<TargetDeviceConfiguration> configuration) = 0;
             // simplified version
             virtual bool initializeSimulation(int outputGpios, int inputGpios);
 
@@ -163,12 +164,12 @@ namespace LabsLand::Utils {
 
             // there can be up to 2 I2C slaves. You can initialize one, the other or both.
             // Note the destructor of this class will delete these objects
-            LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = 0;
-            LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = 0;
+            LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = nullptr; // Destroyed by this class
+            LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = nullptr; // Destroyed by this class
 
         public:
-            TargetDeviceConfiguration(int outputGpios = 0, int inputGpios = 0, LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = 0, LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = 0);
-            TargetDeviceConfiguration(std::vector<std::string> outputGpios, std::vector<std::string> inputGpios, LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = 0, LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = 0);
+            TargetDeviceConfiguration(int outputGpios = 0, int inputGpios = 0, LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = nullptr, LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = nullptr);
+            TargetDeviceConfiguration(std::vector<std::string> outputGpios, std::vector<std::string> inputGpios, LabsLand::Protocols::I2CSlaveConfiguration * firstI2CSlaveConfig = nullptr, LabsLand::Protocols::I2CSlaveConfiguration * secondI2CSlaveConfig = nullptr);
 
             void setOutputGpios(int outputGpios);
             void setOutputGpios(std::vector<std::string> outputGpios);

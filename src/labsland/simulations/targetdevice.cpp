@@ -69,9 +69,9 @@ vector<string> TargetDeviceConfiguration::getInputLabels() const {
 }
 
 void TargetDeviceConfiguration::setFirstI2CSlaveConfig(I2CSlaveConfiguration * firstI2CSlaveConfig) {
-    if (this->firstI2CSlaveConfig != 0) {
+    if (this->firstI2CSlaveConfig != nullptr) {
         delete this->firstI2CSlaveConfig;
-        this->firstI2CSlaveConfig = 0;
+        this->firstI2CSlaveConfig = nullptr;
     }
 
     this->firstI2CSlaveConfig = firstI2CSlaveConfig;
@@ -86,9 +86,9 @@ I2CSlaveConfiguration * TargetDeviceConfiguration::getFirstI2CSlaveConfig() cons
 }
 
 void TargetDeviceConfiguration::setSecondI2CSlaveConfig(I2CSlaveConfiguration * secondI2CSlaveConfig) {
-    if (this->secondI2CSlaveConfig != 0) {
+    if (this->secondI2CSlaveConfig != nullptr) {
         delete this->secondI2CSlaveConfig;
-        this->secondI2CSlaveConfig = 0;
+        this->secondI2CSlaveConfig = nullptr;
     }
 
     this->secondI2CSlaveConfig = secondI2CSlaveConfig;
@@ -103,13 +103,13 @@ I2CSlaveConfiguration * TargetDeviceConfiguration::getSecondI2CSlaveConfig() con
 }
 
 TargetDeviceConfiguration::~TargetDeviceConfiguration() {
-    if (this->firstI2CSlaveConfig != 0) {
+    if (this->firstI2CSlaveConfig != nullptr) {
         delete this->firstI2CSlaveConfig;
-        this->firstI2CSlaveConfig = 0;
+        this->firstI2CSlaveConfig = nullptr;
     }
-    if (this->secondI2CSlaveConfig != 0) {
+    if (this->secondI2CSlaveConfig != nullptr) {
         delete this->secondI2CSlaveConfig;
-        this->secondI2CSlaveConfig = 0;
+        this->secondI2CSlaveConfig = nullptr;
     }
 }
 
@@ -131,14 +131,13 @@ bool TargetDevice::initializeSimulation(std::vector<std::string> outputGpios, st
 }
 
 bool TargetDevice::checkSimulationSupport(int outputGpios, int inputGpios) {
-    TargetDeviceConfiguration * configuration = new TargetDeviceConfiguration(outputGpios, inputGpios);
+    shared_ptr<TargetDeviceConfiguration> configuration = make_shared<TargetDeviceConfiguration>(outputGpios, inputGpios);
     bool result = this->checkSimulationSupport(configuration);
-    delete configuration;
     return result;
 }
 
 bool TargetDevice::initializeSimulation(int outputGpios, int inputGpios) {
-    TargetDeviceConfiguration * configuration = new TargetDeviceConfiguration(outputGpios, inputGpios);
+    shared_ptr<TargetDeviceConfiguration> configuration = make_shared<TargetDeviceConfiguration>(outputGpios, inputGpios);
     return this->initializeSimulation(configuration);
 }
 
@@ -168,8 +167,7 @@ bool TargetDevice::getGpio(std::string inputPosition) {
 
 
 TargetDevice::~TargetDevice() {
-    if (this->configuration != 0) {
-        delete this->configuration;
-        this->configuration = 0;
+    if (this->configuration != nullptr) {
+        this->configuration.reset();
     }
 }

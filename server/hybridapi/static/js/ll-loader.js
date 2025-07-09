@@ -1,3 +1,161 @@
+function processSerialText(serialText) {
+    var config = window.CONFIG.SIMULATION_CONFIG;
+    var outputs = config.serial.dut2sim.outputs;      // e.g., [2, 3]
+    var latch = config.serial.dut2sim.latch;          // e.g., 0
+    var pulse = config.serial.dut2sim.pulse;          // e.g., 1
+    var numPulses = config.serial.dut2sim.num_pulses; // e.g., 256
+
+    var blockSize = outputs.length;                // e.g., 2
+    var expectedLength = numPulses * blockSize;
+    var timeBetweenPulses = 100;
+
+    // a) Validate the length of serialText.
+    if (serialText.length !== expectedLength) {
+        alert("serialText should be " + expectedLength + " characters long, but got " + serialText.length);
+        return;
+    }
+
+    // Helper function: delay execution for a specified time.
+    function delay(ms, callback) {
+        setTimeout(callback, ms);
+    }
+
+    // Function to process each block (chunk) of the serialText.
+    function processBlock(chunkIndex) {
+        if (chunkIndex >= serialText.length) {
+            // All blocks processed.
+            return;
+        }
+
+        // Extract a chunk of length equal to the number of outputs.
+        var chunk = serialText.substr(chunkIndex, blockSize);
+
+        // Function to process each output for the current chunk.
+        function processOutput(outputIndex) {
+            if (outputIndex >= outputs.length) {
+                // After setting all outputs, send the pulse.
+                $.ajax({
+                    url: window.BASE_URL + "/gpios/dut2sim/" + pulse,
+                    method: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({ value: "1" }),
+                    success: function () {
+                        delay(timeBetweenPulses, function () {
+                            $.ajax({
+                                url: window.BASE_URL + "/gpios/dut2sim/" + pulse,
+                                method: "POST",
+                                dataType: "json",
+                                data: JSON.stringify({ value: "0" }),
+                                success: function () {
+                                    delay(timeBetweenPulses, function () {
+                                        processBlock(chunkIndex + blockSize);
+                                    });
+                                }
+                            });
+                        });
+                    }
+                });
+                return;
+            }
+
+            // Send the output value for the current output.
+            var output = outputs[outputIndex];
+            var value = (chunk.charAt(outputIndex) === "1");
+            $.ajax({
+                url: window.BASE_URL + "/gpios/dut2sim/" + output,
+                method: "POST",
+                dataType: "json",
+                data: JSON.stringify({ value: value }),
+                success: function () {
+                    // Process the next output in the chunk.
+                    processOutput(outputIndex + 1);
+                }
+            });
+        }
+
+        // Start processing outputs for this chunk.
+        processOutput(0);
+    }
+
+    // First, toggle the latch signal before processing the serialText.
+    $.ajax({
+        url: window.BASE_URL + "/gpios/dut2sim/" + latch,
+        method: "POST",
+        dataType: "json",
+        data: JSON.stringify({ value: "1" }),
+        success: function () {
+            delay(timeBetweenPulses, function () {
+                $.ajax({
+                    url: window.BASE_URL + "/gpios/dut2sim/" + latch,
+                    method: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({ value: "0" }),
+                    success: function () {
+                        delay(timeBetweenPulses, function () {
+                            // Now start processing the serialText blocks.
+                            processBlock(0);
+                        });
+                    }
+                });
+            });
+        }
+    });
+}
+
+
+function dut2SimSendSerial(serialText) {
+    var $latch;
+    var $pulse;
+    var $outputs = {}
+    for (var i = 0; i < window.CONFIG.SIMULATION_CONFIG.gpios.dut2sim.labels.length; i++) {
+        var gpio = window.CONFIG.SIMULATION_CONFIG.gpios.dut2sim.labels[i].trim();
+        if (gpio === "latch") {
+            $latch = $("#gpios-dut2sim-" + i);
+            console.log("$latch is: " + "#gpios-dut2sim-" + i + "; and there are: " + $latch.length);
+        } else if (gpio === "pulse") {
+            $pulse = $("#gpios-dut2sim-" + i);
+            console.log("$pulse is: " + "#gpios-dut2sim-" + i + "; and there are: " + $pulse.length);
+        } else {
+            $outputs[gpio] = $("#gpios-dut2sim-" + i);
+            console.log("" + gpio + " is: " + "#gpios-dut2sim-" + i + "; and there are: " + $outputs[gpio].length);
+        }
+    }
+
+    $pulse.prop("checked", false).trigger("change"); 
+    console.log("pulse=0");
+    setTimeout(function () { 
+        $latch.prop("checked", true).trigger("change"); 
+        console.log("latch=1");
+    }, 50); // 50 ms
+    setTimeout(function () { 
+        $latch.prop("checked", false).trigger("change"); 
+        console.log("latch=0");
+    }, 500); // 100 ms
+
+    var timeAfterLatch = 300;
+    var numberOfOutputs = Object.keys($outputs).length;
+
+    for (var i = 0; i < window.CONFIG.SIMULATION_CONFIG.serial.dut2sim.num_pulses; i++) {
+        var timeBetween = 150; // ms
+        let outputCount = 0;
+        for (const outputName in $outputs) {
+            let $output = $outputs[outputName];
+            let currentChar = serialText.charAt(i * numberOfOutputs + outputCount);
+            let checked = currentChar === '1' ? true : false;
+            console.log(i, numberOfOutputs, outputCount, currentChar);
+            setTimeout(function () {
+                $output.prop("checked", checked).trigger("change"); 
+                console.log("Change " + $output.attr("id") + " to " + checked);
+            }, timeAfterLatch + i * timeBetween + 15);
+            console.log(i, ": ", outputName, ": ", checked, "; output: ", $output);
+
+            outputCount += 1;
+        }
+        setTimeout(function () { $pulse.prop("checked", true).trigger("change"); }, timeAfterLatch + i * timeBetween + 30); // after putting the value, communicate that there is a new value
+        setTimeout(function () { $pulse.prop("checked", false).trigger("change"); }, timeAfterLatch + i * timeBetween + 60); // some time later, finish and in the next you will show the next value
+    }
+}
+
 function requestSim2DutGpios() {
     $.get(window.BASE_URL + "/gpios/sim2dut/?previous_response=" + window.SIM2DUT_STATUS).done(function (data) {
         window.SIM2DUT_STATUS = data.value;
@@ -38,6 +196,7 @@ function requestWeb2SimMessages() {
     $.get(window.BASE_URL + "/messages/web2sim/?previous_response=" + encodeURIComponent(window.WEB2SIM_STATUS)).done(function (data) {
         window.WEB2SIM_STATUS = data.value;
         $("#web2sim-messages").val(data.value);
+        $("#web2sim-messages").trigger('input');
         requestWeb2SimMessages();
     });
 }

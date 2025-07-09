@@ -22,15 +22,15 @@ namespace LabsLand::Utils {
     class TimeManager {
         public:
             // sleep a number of milliseconds
-            virtual void sleepMs(uint32_t ms) = 0;
+            virtual void sleepMs(uint32_t ms) const = 0;
 
             // sleep a number of microseconds
-            virtual void sleepUs(uint32_t us) = 0;
+            virtual void sleepUs(uint32_t us) const = 0;
 
             // get time since boot in microseconds
-            virtual clock_t getAbsoluteTime() = 0;
+            virtual clock_t getAbsoluteTime() const = 0;
 
-            virtual uint64_t getClocksPerSec() = 0;
+            virtual uint64_t getClocksPerSec() const = 0;
     };
 
 }

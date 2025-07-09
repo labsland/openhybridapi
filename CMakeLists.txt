@@ -19,5 +19,6 @@ add_executable(hybridapi
     src/deusto/wiperDeusto.cpp
     src/deusto/wiper2BitDeusto.cpp
     src/rhlab/butterfly.cpp
-
+    src/rhlab/matrix.cpp
+    src/rhlab/morse.cpp
 )

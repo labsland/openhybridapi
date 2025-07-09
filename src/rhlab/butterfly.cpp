@@ -6,12 +6,11 @@
 using namespace std;
 
 void ButterflySimulation::initialize(){
+
     // this->targetDevice.setGpio(0, true); //first output gpio
     // this->targetDevice.getGpio(0);  // first input gpio, which is different
 
     // this->log() << "Number of Simulation Outputs: " << this->getNumberOfSimulationOutputs() << endl;
-
-    #ifdef USE_DE1_SOC
     this->targetDevice->initializeSimulation(this->getNumberOfSimulationOutputs(), this->getNumberOfSimulationInputs());
 
     for(int i = 0; i < this->getNumberOfSimulationOutputs(); i++){
@@ -25,23 +24,6 @@ void ButterflySimulation::initialize(){
     for(int i = 0; i < BUFFER_ARRAY_SIZE; i++){
         this->buffer.push_back(false);
     }
-    
-    #else
-    this->targetDevice->initializeSimulation(SIM_OUTPUT_GPIO_NUM, SIM_INPUT_GPIO_NUM);
-
-    for(int i = 0; i < SIM_OUTPUT_GPIO_NUM; i++){
-        this->output_gpio_tracker.push_back(false);
-    }
-
-    for(int i = 0; i < SIM_INPUT_GPIO_NUM; i++){
-        this->input_gpio_tracker.push_back(this->targetDevice->getGpio(i));
-    }
-
-    for(int i = 0; i < BUFFER_ARRAY_SIZE; i++){
-        this->buffer.push_back(false);
-    }
-
-    #endif
 
 
     for(int i = 0; i < LED_ARRAY_SIZE; i++){
@@ -53,8 +35,6 @@ void ButterflySimulation::initialize(){
 
 // Prints the current gpio header states
 void ButterflySimulation::print_gpio_header_states(){
-    
-    #ifdef USE_DE1_SOC
     this->log() << "----- Input -----" << endl;
     for(int i = 0; i < this->getNumberOfSimulationInputs(); i++){
         this->log() << "g" << i << ": " << this->input_gpio_tracker[i] << endl;
@@ -64,18 +44,6 @@ void ButterflySimulation::print_gpio_header_states(){
     for(int i = 0; i < this->getNumberOfSimulationOutputs(); i++){
         this->log() << "g" << i << ": " << this->output_gpio_tracker[i] << endl;
     }
-    #else
-    this->log() << "----- Input -----" << endl;
-    for(int i = 0; i < SIM_INPUT_GPIO_NUM; i++){
-        this->log() << "g" << i << ": " << this->input_gpio_tracker[i] << endl;
-    }
-
-    this->log() << "----- Output -----" << endl;
-    for(int i = 0; i < SIM_OUTPUT_GPIO_NUM; i++){
-        this->log() << "g" << i << ": " << this->output_gpio_tracker[i] << endl;
-    }
-    #endif
-
 }
 
 // Prints the current buffer states
@@ -383,4 +351,20 @@ void ButterflySimulation::update(double delta){
 
     requestReportState();
     // reportUpdate();
+}
+
+int FPGA_DE1SoC_ButterflySimulation::getNumberOfSimulationInputs() {
+    return 7;
+}
+
+int FPGA_DE1SoC_ButterflySimulation::getNumberOfSimulationOutputs() {
+    return 5;
+}
+
+int STM32_WB55RG_ButterflySimulation::getNumberOfSimulationInputs() {
+    return 6;
+}
+
+int STM32_WB55RG_ButterflySimulation::getNumberOfSimulationOutputs() {
+    return 5;
 }

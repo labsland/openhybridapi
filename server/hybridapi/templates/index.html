@@ -3,97 +3,108 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LabsLand Simulation Runner</title>
+    <title>REDTAIL Simulation Runner</title>
     <link href="{{ url_for('static', filename='vendor/bootstrap-5.2.3/css/bootstrap.min.css') }}" rel="stylesheet">
   </head>
   <body>
+    <script>
+        // Inject Flask config values into JavaScript
+        window.CONFIG = {
+            SIMULATION_CONFIG: {{ config['SIMULATION_CONFIG']|tojson }}
+        };
+
+        // Define variables for text input
+        const simulationName = window?.CONFIG.SIMULATION_CONFIG.name;
+        const numBitsdut2Sim = 
+            window?.CONFIG.SIMULATION_CONFIG.serial?.dut2sim?.num_pulses * 
+            window?.CONFIG.SIMULATION_CONFIG.serial?.dut2sim?.outputs?.length || 0;
+    </script>
+
     <div class="container-fluid">
-        <h2>LabsLand Simulation Runner</h2>
+        <h2>REDTAIL Simulation Runner</h2>
         
         <ul>
             <li>Simulation: {{ config['SIMULATION_CONFIG']['name'] }}</li>
             <li>Description: {{ config['SIMULATION_CONFIG']['description'] }}</li>
             <li>File: {{ config['SIMULATIONS_DIRECTORY'] }}{{ sep }}{{ config['SIMULATION_CONFIG_FILE'] }}</li>
         </ul>
+
+        <hr>
+
         <div class="row">
-            <div class="col">
-                <h3>GPIOs</h3>
+            <div class="col-lg-6">
+                    <h3>GPIOs</h3>
 
-                <strong>Simulation to Device Under Test:</strong>
-                <br>
-                <small><tt>{{ config['BINARY_DIRECTORY'] }}{{ sep }}{{ config['SIMULATION_CONFIG']['gpios']['sim2dut']['file'] }}</tt></small>
-                <br>
-
-                {% if config['SIMULATION_CONFIG']['gpios']['sim2dut']['number'] == 0 %}
-                    No GPIO in this direction
-                {% else %}
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                {% for n in range(config['SIMULATION_CONFIG']['gpios']['sim2dut']['number']) %}
-                                <th>gpio-sim2dut-{{ n }}
-                                {% if config['SIMULATION_CONFIG']['gpios']['sim2dut']['labels'] %}
-                                    <br>
-                                    <small><tt>({{ config['SIMULATION_CONFIG']['gpios']['sim2dut']['labels'][n] }})</tt></small>
-                                {% endif %}
-                                </th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                {% for n in range(config['SIMULATION_CONFIG']['gpios']['sim2dut']['number']) %}
-                                <td id="gpios-sim2dut-{{ n }}">
-                                    <div class="form-check gpio-sim2dut">
-                                        <input class="form-check-input" disabled type="checkbox" id="gpios-sim2dut-{{ n }}" data-number="{{ n }}">
-                                        <label class="form-check-label" for="gpios-sim2dut-{{ n }}" id="gpios-sim2dut-{{ n }}-label">0</label>
-                                    </div>
-                                </td>
-                                {% endfor %}
-                            </tr>
-                        </tbody>
-                    </table>
-                {% endif %}
-
-                <strong>Device Under Test to simulation:</strong>
-                <br>
-                <small><tt>{{ config['BINARY_DIRECTORY'] }}{{ sep }}{{ config['SIMULATION_CONFIG']['gpios']['dut2sim']['file'] }}</tt></small>
-                <br>
-
-                {% if config['SIMULATION_CONFIG']['gpios']['dut2sim']['number'] == 0 %}
-                    No GPIO in this direction
-                {% else %}
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                {% for n in range(config['SIMULATION_CONFIG']['gpios']['dut2sim']['number']) %}
-                                <th>
-                                    gpio-dut2sim-{{ n }}
-                                    {% if config['SIMULATION_CONFIG']['gpios']['dut2sim']['labels'] %}
+                    <strong>Simulation to Device Under Test:</strong>
+                    {% if not config['SIMULATION_CONFIG']['gpios'].get('sim2dut') %}
+                        No GPIO in this direction<br><br>
+                    {% else %}
+                        <br><small><tt>{{ config['BINARY_DIRECTORY'] }}{{ sep }}{{ config['SIMULATION_CONFIG']['gpios']['sim2dut']['file'] }}</tt></small><br>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    {% for n in range(config['SIMULATION_CONFIG']['gpios']['sim2dut']['number']) %}
+                                    <th>gpio-sim2dut-{{ n }}
+                                    {% if config['SIMULATION_CONFIG']['gpios']['sim2dut']['labels'] %}
                                         <br>
-                                        <small><tt>({{ config['SIMULATION_CONFIG']['gpios']['dut2sim']['labels'][n] }})</tt></small>
+                                        <small><tt>({{ config['SIMULATION_CONFIG']['gpios']['sim2dut']['labels'][n] }})</tt></small>
                                     {% endif %}
-                                </th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                {% for n in range(config['SIMULATION_CONFIG']['gpios']['dut2sim']['number']) %}
-                                <td>
-                                    <div class="form-check gpio-dut2sim">
-                                        <input class="form-check-input" type="checkbox" id="gpios-dut2sim-{{ n }}" data-number="{{ n }}">
-                                        <label class="form-check-label" for="gpios-dut2sim-{{ n }}" id="gpios-dut2sim-{{ n }}-label">0</label>
-                                    </div>
-                                </td>
-                                {% endfor %}
-                            </tr>
-                        </tbody>
-                    </table>
-                {% endif %}
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    {% for n in range(config['SIMULATION_CONFIG']['gpios']['sim2dut']['number']) %}
+                                    <td id="gpios-sim2dut-{{ n }}">
+                                        <div class="form-check gpio-sim2dut">
+                                            <input class="form-check-input" disabled type="checkbox" id="gpios-sim2dut-{{ n }}" data-number="{{ n }}">
+                                            <label class="form-check-label" for="gpios-sim2dut-{{ n }}" id="gpios-sim2dut-{{ n }}-label">0</label>
+                                        </div>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    {% endif %}
 
-            </div>
-            <div class="col">
+                    <strong>Device Under Test to Simulation:</strong>
+                    {% if not config['SIMULATION_CONFIG']['gpios'].get('sim2dut') %}
+                        No GPIO in this direction
+                    {% else %}
+                        <small><tt>{{ config['BINARY_DIRECTORY'] }}{{ sep }}{{ config['SIMULATION_CONFIG']['gpios']['dut2sim']['file'] }}</tt></small>
+                        <br>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    {% for n in range(config['SIMULATION_CONFIG']['gpios']['dut2sim']['number']) %}
+                                    <th>
+                                        gpio-dut2sim-{{ n }}
+                                        {% if config['SIMULATION_CONFIG']['gpios']['dut2sim']['labels'] %}
+                                            <br>
+                                            <small><tt>({{ config['SIMULATION_CONFIG']['gpios']['dut2sim']['labels'][n] }})</tt></small>
+                                        {% endif %}
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    {% for n in range(config['SIMULATION_CONFIG']['gpios']['dut2sim']['number']) %}
+                                    <td>
+                                        <div class="form-check gpio-dut2sim">
+                                            <input class="form-check-input" type="checkbox" id="gpios-dut2sim-{{ n }}" data-number="{{ n }}">
+                                            <label class="form-check-label" for="gpios-dut2sim-{{ n }}" id="gpios-dut2sim-{{ n }}-label">0</label>
+                                        </div>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    {% endif %}
+            </div>      
+
+            <div class="col-lg-6">
                 <h3>Messages</h3>
                 <table class="table table-bordered">
                     <tbody>
@@ -103,7 +114,7 @@
                                 <br>
                                 <small><tt>{{ config['BINARY_DIRECTORY'] }}{{ sep }}{{ config['SIMULATION_CONFIG']['messages']['sim2web']['file'] }}</tt></small>
                             </td>
-                            <td id="sim2web-messages"></td>
+                            <td id="sim2web-messages" class="text-break"></td>
                         </tr>
                         <tr>
                             <td>
@@ -113,16 +124,256 @@
                             
                             </td>
                             <td>
-                                <input type="text" id="web2sim-messages"></input>
-                                <button class="btn btn-primary" id="web2sim-messages-button">Send</button>
+                                <div class="d-flex align-items-start">
+                                    <textarea id="web2sim-messages" class="form-control me-2" 
+                                              style="width: 80%; overflow-wrap: break-word; white-space: pre-wrap; height:auto; resize:none;" 
+                                              wrap="soft"></textarea>
+                                    <button class="btn btn-primary" id="web2sim-messages-button">Send</button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </div>            
+
         </div>
 
+        <hr>
+
         <div class="row">
+            <div class="col">
+                <p>
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#text-collapse" aria-expanded="false" aria-controls="text-collapse">
+                        Text
+                    </button>
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#file-collapse" aria-expanded="false" aria-controls="file-collapse">
+                        File
+                    </button>
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#sample-collapse" aria-expanded="false" aria-controls="sample-collapse">
+                        Samples
+                    </button>
+                  </p>
+            </div>
+        </div>        
+              
+        <div class="row">
+
+                <div class="col collapse multi-collapse" id="text-collapse" data-bs-parent=".content-container">
+                <div class="card card-body">
+                    <h3>Text Input</h3>
+                    {% if not config['SIMULATION_CONFIG'].get('serial') %}
+                        No Serial Communication Protocol
+                    {% else %}
+                        {% if config['SIMULATION_CONFIG']['serial'].get('dut2sim') %}
+                            <br>
+                            <div class="row-md-6">
+                                    <!-- Submit Button -->
+                                <div class="input-group mb-3">
+                                    <button class="btn btn-primary" type="button" id="button-send-text-dut2sim">Send dut2sim</button>
+                                    <input type="text" class="form-control" id="dut2sim-text-input"
+                                            aria-label="Sizing example input" 
+                                            aria-describedby="button-text-send-dut2sim">
+                                    <div id="dut2sim-text-invalid-message" class="invalid-feedback"></div>
+                                </div>
+                                
+                            </div>
+                            <script>
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    // Get the button and input field
+                                    const sendButton = document.getElementById("button-send-text-dut2sim");
+                                    const dut2simTextInputField = document.getElementById("dut2sim-text-input");
+                                    const errorMessageDiv = document.getElementById("dut2sim-text-invalid-message");
+
+                                    // Add event listener to the button
+                                    sendButton.addEventListener("click", function () {
+                                        // Store the input value in a constant
+                                        const dut2simTextInput = dut2simTextInputField.value.trim();
+                                        // Regular expression to check for only 1s and 0s
+                                        const binaryRegex = /^[01]+$/;
+
+                                        if (!binaryRegex.test(dut2simTextInput)) {
+                                            dut2simTextInputField.classList.remove("is-valid"); // Remove success style
+                                            dut2simTextInputField.classList.add("is-invalid"); // Apply error style
+                                            errorMessageDiv.textContent = ` Expected only 1s and 0s, received content containing other characteres`;
+                                        } else if (dut2simTextInput.length !== numBitsdut2Sim) {
+                                            dut2simTextInputField.classList.remove("is-valid"); // Remove success style
+                                            dut2simTextInputField.classList.add("is-invalid"); // Apply error style
+                                            errorMessageDiv.textContent = ` Received ${dut2simTextInput.length} characters.\nExpected ${numBitsdut2Sim} characters`;
+                                        } else {
+                                            dut2simTextInputField.classList.remove("is-invalid"); // Remove error style
+                                            dut2simTextInputField.classList.add("is-valid"); // Apply success style
+                                            errorMessageDiv.textContent = ""; // Clear error message
+                                            processSerialText(dut2simTextInput);
+                                        }
+                                    });
+                                });
+                            </script>                                
+                        {% endif %}
+                    {% endif %}
+                </div>
+                </div>
+
+                <div class="col collapse multi-collapse" id="file-collapse" data-bs-parent=".content-container">
+                <div class="card card-body">
+                    <h3>File Input</h3>
+                    {% if not config['SIMULATION_CONFIG'].get('serial') %}
+                        No Serial Communication Protocol
+                    {% else %}
+                        {% if config['SIMULATION_CONFIG']['serial'].get('dut2sim') %}
+                            <br>
+                            <div class="row-md-6">
+                                <!-- File Upload and Send Button -->
+                                <div class="input-group mb-3">
+                                    <button type="button" id="button-file-send-dut2sim" class="btn btn-primary">Send dut2sim</button>
+                                    <input type="file" class="form-control" id="dut2sim-file-input" aria-describedby="button-file-send-dut2sim">
+                                </div>
+                                <div id="dut2sim-file-invalid-message" class="invalid-feedback"></div>
+                            </div>
+                                
+                            <script>
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    // Get the button, file input, and error message element
+                                    const sendButton = document.getElementById("button-file-send-dut2sim");
+                                    const dut2simFileInputField = document.getElementById("dut2sim-file-input");
+                                    const errorMessageDiv = document.getElementById("dut2sim-file-invalid-message");
+                                
+                                    // Add event listener to the Send button
+                                    sendButton.addEventListener("click", function () {
+                                        // Get the selected file
+                                        const file = dut2simFileInputField.files[0];
+                                        if (!file) {
+                                            errorMessageDiv.textContent = "No file selected!";
+                                            return;
+                                        }
+                                        
+                                        // Use FileReader to read the file as text
+                                        const reader = new FileReader();
+                                        reader.onload = function(e) {
+                                            const dut2simFileContent = e.target.result.trim();
+                                            // Regular expression to check for only 1s and 0s
+                                            const binaryRegex = /^[01]+$/;
+                                            
+                                            if (!binaryRegex.test(dut2simFileContent)) {
+                                                dut2simFileInputField.classList.remove("is-valid");
+                                                dut2simFileInputField.classList.add("is-invalid");
+                                                errorMessageDiv.textContent = "Expected only 1s and 0s, but received content with other characters.";
+                                            } else if (dut2simFileContent.length !== numBitsdut2Sim) {
+                                                dut2simFileInputField.classList.remove("is-valid");
+                                                dut2simFileInputField.classList.add("is-invalid");
+                                                errorMessageDiv.textContent = `Received ${dut2simFileContent.length} characters. Expected ${numBitsdut2Sim} characters.`;
+                                            } else {
+                                                dut2simFileInputField.classList.remove("is-invalid");
+                                                dut2simFileInputField.classList.add("is-valid");
+                                                errorMessageDiv.textContent = "";
+                                                // Call your processing function with the valid content
+                                                processSerialText(dut2simFileContent);
+                                            }
+                                        };
+                                        reader.readAsText(file);
+                                    });
+                                });
+                            </script>                          
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col collapse multi-collapse" id="sample-collapse" data-bs-parent=".content-container">
+                <div class="card card-body">
+                    <h3>Sample Input</h3>
+                    {% if not config['SIMULATION_CONFIG'].get('serial') %}
+                    No Serial Communication Protocol
+                    {% elif not config['SIMULATION_CONFIG']['serial'].get('dut2sim') %}
+                    No Samples For Serial Communication
+                    {% else %}
+                    <div class="row-md-6">
+                        <!-- File Upload and Sample Buttons -->
+                        <div class="d-grid gap-2 mb-3">
+                        {% for key, sample in config['SIMULATION_CONFIG']['serial']['dut2sim']['sample_input']['samples'].items() %}
+                            <button type="button"
+                                    id="button-sample-send-dut2sim-{{ key }}"
+                                    class="btn btn-primary"
+                                    data-file="{{ sample.file }}">
+                            {{ sample.name }}
+                            </button>
+                        {% endfor %}
+                        </div>
+                        <div id="dut2sim-sample-invalid-message" class="invalid-feedback"></div>
+                    </div>
+                    
+                    {% set samples_base_url = config['SIMULATION_CONFIG']['serial']['dut2sim']['sample_input']['url'] %}
+                    {% if samples_base_url.startswith('http://') or samples_base_url.startswith('https://') %}
+                        {% set samples_url = samples_base_url %} 
+                    {% else %}
+                        {% set samples_url = url_for('static', filename='simulations/') + samples_base_url %}
+                    {% endif %} 
+                    
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function () {
+                        // Get all sample buttons and the error message element
+                        const sampleButtons = document.querySelectorAll("button[id^='button-sample-send-dut2sim-']");
+                        const errorMessageDiv = document.getElementById("dut2sim-sample-invalid-message");
+                
+                        // Attach click event listeners to each sample button
+                        sampleButtons.forEach(button => {
+                            button.addEventListener("click", function () {
+                            // Get the sample file from data attribute
+                            const sampleFile = button.getAttribute("data-file");
+                            let url;
+                            if (sampleFile.startsWith("http://") || sampleFile.startsWith("https://")) {
+                                url = sampleFile;
+                            } else {
+                                url = "{{ samples_url }}" + sampleFile;
+                                console.log('sample: ', url);
+                            }
+                
+                            fetch(url)
+                                .then(response => {
+                                if (!response.ok) {
+                                    throw new Error("Network response was not ok");
+                                }
+                                return response.text();
+                                })
+                                .then(text => {
+                                const content = text.trim();
+                                // Regular expression to check for only 1s and 0s
+                                console.log(content);
+                                const binaryRegex = /^[01]+$/;
+                                if (!binaryRegex.test(content)) {
+                                    console.log("other chars");
+                                    errorMessageDiv.textContent = "Expected only 1s and 0s, but received content with other characters.";
+                                } else if (content.length !== numBitsdut2Sim) {
+                                    console.log("wrong length: ", content.length);
+                                    errorMessageDiv.textContent = `Received ${content.length} characters. Expected ${numBitsdut2Sim} characters.`;
+                                } else {
+                                    errorMessageDiv.textContent = "";
+                                    // Process the valid content
+                                    console.log("sending to process");
+                                    processSerialText(content);
+                                }
+                                })
+                                .catch(error => {
+                                console.log("ERROR");
+                                errorMessageDiv.textContent = "Error loading file: " + error.message;
+                                });
+                            });
+                        });
+                        });
+                    </script>
+                    {% endif %}
+                </div>
+            </div>
+                
+
+            </div>
+
+        </div>
+
+
+        <div class="row">
+            <div class="col">
+                <hr>
+
             <h2>Simulation iframe</h2>
 
             {% if config['SIMULATION_CONFIG']['iframe']['url'].startswith(('http://', 'https://')) %}
@@ -137,7 +388,9 @@
             </ul>
 
             {% set initial_height = config['SIMULATION_CONFIG']['iframe'].get('height', '500') %}
-            <iframe id="simulation-iframe" src="{{ iframe_src }}" width="100%" height="{{ initial_height }}" style="border: 1px solid black"></iframe>
+            <iframe id="simulation-iframe" src="{{ iframe_src }}" width="95%" height="{{ initial_height }}" style="border: 1px solid black"></iframe>
+
+            </div>
         </div>
     </div>
     <script src="{{ url_for('static', filename='vendor/jquery-3.6.3.min.js') }}"></script>
@@ -154,5 +407,14 @@
 
         iFrameResize({ log: false }, '#simulation-iframe')
     </script>
+    <script>
+        $("#web2sim-messages").bind('input', function () {
+            // Reset the height to recalculate the scrollHeight correctly
+            this.style.height = 'auto';
+            // Set the height to match the content
+            this.style.height = this.scrollHeight + 'px';
+        });
+        $('#web2sim-messages').trigger('input');
+    </script>    
   </body>
 </html>

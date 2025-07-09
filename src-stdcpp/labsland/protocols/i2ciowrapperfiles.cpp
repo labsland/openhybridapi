@@ -12,7 +12,6 @@
 #include <sstream>
 #include <iostream>
 
-
 #include "i2ciowrapperfiles.h"
 
 using namespace std;

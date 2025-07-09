@@ -1,0 +1,36 @@
+name: Template
+description: Description Here
+
+iframe:
+  url: null
+  height: null
+
+gpios:
+  dut2sim:
+    # FPGA outputs
+    labels: [] # list names of GPIOs from dut to sim
+  sim2dut:
+    labels: [] # list names of GPIOs from sim to dut
+
+serial:
+    # A serial communication scheme with numbered latch, pulse, inupt channels, and output channels
+    # There must be a "gpios" section to use this!
+  dut2sim:
+    latch: null # Index of latch GPIO
+    pulse: null # Index of pulse GPIO
+    inputs: [] # List in GPIO input indicies (optional)
+    outputs: [2, 3] #  List in GPIO output indicies (optional)
+    num_pulses: null # The number of pulses per latch
+
+    samples:
+      # Files must have the following format: "01001001" (or whatever)
+      example_image: 
+        file: startup.txt
+        name: Startup image
+  
+  sim2dut:
+    latch: null
+    pulse: null
+    inputs: []
+    outputs: []
+    num_pulses: null

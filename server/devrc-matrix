@@ -1,0 +1,6 @@
+export FLASK_APP=autoapp.py
+export FLASK_CONFIG=development
+export FLASK_DEBUG=1
+export FLASK_RUN_WITH_THREADS=1
+export SIMULATION_CONFIG_FILE=matrix.yml
+flask run
