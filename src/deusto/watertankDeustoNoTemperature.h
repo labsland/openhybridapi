@@ -16,8 +16,6 @@
      bool pump1ActiveBit1;
      bool pump2ActiveBit0;
      bool pump2ActiveBit1;
-     float pump1Temperature;
-     float pump2Temperature;
      float currentLoad;
      bool lowSensorActive;
      bool midSensorActive;
@@ -25,9 +23,8 @@
 
      std::string serialize() const {
          std::stringstream stream;
-         stream << level << "&" << pump1ActiveBit0 << pump1ActiveBit1 << "&" << pump2ActiveBit0 << pump2ActiveBit1 << "&" <<
-             pump1Temperature << "&" << pump2Temperature << "&" << lowSensorActive << "&" <<
-             midSensorActive << "&" << highSensorActive << "&";
+         stream << level << "&" << totalVolume << "&" << volume << "&" << pump1ActiveBit0 << pump1ActiveBit1 << "&" << pump2ActiveBit0 << pump2ActiveBit1 << "&" <<
+            currentLoad << "&" << lowSensorActive << "&" << midSensorActive << "&" << highSensorActive << "&";
          return stream.str();
      }
  };
