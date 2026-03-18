@@ -8,4 +8,7 @@ set(SIMULATIONS_CPP_FILES
     hybridapi/src/rhlab/morse.cpp
     hybridapi/src/deusto/door.cpp
     hybridapi/src/deusto/watertankDeusto.cpp
+    hybridapi/src/deusto/watertankDeustoNoTemperature.cpp
+    hybridapi/src/deusto/wiperDeusto.cpp
+    hybridapi/src/deusto/wiper2BitDeusto.cpp
 )
