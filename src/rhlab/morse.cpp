@@ -236,11 +236,11 @@ void MorseSimulation::update(double delta) {
     
     // Static variables to persist between calls
     static bool lastSignal = currentSignal;  // Initialize with current value
-    static clock_t lastTransitionTime = this->timeManager->getAbsoluteTime();
+    static LabsLand::Utils::clock_t lastTransitionTime = this->timeManager->getAbsoluteTime();
     static bool initialized = false;
     
     // Get current timestamp
-    clock_t currentTime = this->timeManager->getAbsoluteTime();
+    LabsLand::Utils::clock_t currentTime = this->timeManager->getAbsoluteTime();
     
     // First-time initialization
     if (!initialized) {

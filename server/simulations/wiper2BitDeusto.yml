@@ -1,0 +1,10 @@
+name: Wiper 2 Bit
+description: This is a Deusto 2-bit wiper simulation
+iframe:
+  url: https://static-apps.labsland.com/simulations/wiper2BitDeusto/index.html
+  height: 700
+gpios:
+  sim2dut:
+    labels: [ rainSensor, rightSensor, leftSensor, mButton, pButton ]
+  dut2sim:
+    labels: [ move1, move2 ]

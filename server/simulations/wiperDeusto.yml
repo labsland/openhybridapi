@@ -1,0 +1,10 @@
+name: Wiper
+description: This is a Deusto wiper simulation
+iframe:
+  url: https://static-apps.labsland.com/simulations/wiperDeusto/index.html
+  height: 700
+gpios:
+  sim2dut:
+    labels: [ rainSensor, rightSensor, leftSensor, mButton, pButton ]
+  dut2sim:
+    labels: [ move ]

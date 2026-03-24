@@ -1,0 +1,10 @@
+name: Watertank No Temperature
+description: This is a watertank simulation without pump temperature channels
+iframe:
+  url: https://static-apps.labsland.com/simulations/watertankDeustoNoTemperature/index.html
+  height: 700
+gpios:
+  sim2dut:
+    labels: [ lowSensor, midSensor, highSensor ]
+  dut2sim:
+    labels: [ pump1Bit0, pump1Bit1, pump2Bit0, pump2Bit1 ]
