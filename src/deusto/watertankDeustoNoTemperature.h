@@ -7,29 +7,39 @@
  #include <string>
  #include <vector>
  
- struct WatertankDeustoNoTemperatureData : public BaseOutputDataType {
-     float level = 0.0f;
-     float totalVolume = 0.0f;
-     float volume = 0.0f;
+struct WatertankDeustoNoTemperatureData : public BaseOutputDataType {
+    float level = 0.0f;
+    float totalVolume = 0.0f;
+    float volume = 0.0f;
      bool pump1ActiveBit0 = false;
      bool pump1ActiveBit1 = false;
      bool pump2ActiveBit0 = false;
      bool pump2ActiveBit1 = false;
      float currentLoad = 0.0f;
-     bool lowSensorActive = false;
-     bool midSensorActive = false;
-     bool highSensorActive = false;
- 
-     std::string serialize() const {
-         std::stringstream stream;
-         stream << level << "&" << totalVolume << "&" << volume << "&"
-                << pump1ActiveBit0 << pump1ActiveBit1 << "&"
-                << pump2ActiveBit0 << pump2ActiveBit1 << "&"
-                << currentLoad << "&" << lowSensorActive << "&"
-                << midSensorActive << "&" << highSensorActive << "&";
-         return stream.str();
-     }
- };
+    bool lowSensorActive = false;
+    bool midSensorActive = false;
+    bool highSensorActive = false;
+
+    static std::string serializePumpState(bool bit0, bool bit1) {
+        if (bit0 && bit1) {
+            return "11";
+        }
+        if (bit0 || bit1) {
+            return "01";
+        }
+        return "00";
+    }
+
+    std::string serialize() const {
+        std::stringstream stream;
+        stream << level << "&" << totalVolume << "&" << volume << "&"
+               << serializePumpState(pump1ActiveBit0, pump1ActiveBit1) << "&"
+               << serializePumpState(pump2ActiveBit0, pump2ActiveBit1) << "&"
+               << currentLoad << "&" << lowSensorActive << "&"
+               << midSensorActive << "&" << highSensorActive << "&";
+        return stream.str();
+    }
+};
  
  struct WatertankDeustoNoTemperatureRequest : public BaseInputDataType {
      float outputFlow = 0.0f;

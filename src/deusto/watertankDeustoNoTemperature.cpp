@@ -38,17 +38,21 @@
      this->log() << "Pumps: pump1: " << mState.pump1ActiveBit0 << mState.pump1ActiveBit1
                  << "; pump2: " << mState.pump2ActiveBit0 << mState.pump2ActiveBit1 << std::endl;
  
-     if (mState.pump1ActiveBit0 == 1 && mState.pump1ActiveBit1 == 1) {
-         addedWater += 2 * PUMP1_FLOWRATE * delta;
-     } else if (mState.pump1ActiveBit0 == 0 && mState.pump1ActiveBit1 == 1) {
-         addedWater += PUMP1_FLOWRATE * delta;
-     }
- 
-     if (mState.pump2ActiveBit0 == 1 && mState.pump2ActiveBit1 == 1) {
-         addedWater += 2 * PUMP2_FLOWRATE * delta;
-     } else if (mState.pump2ActiveBit0 == 0 && mState.pump2ActiveBit1 == 1) {
-         addedWater += PUMP2_FLOWRATE * delta;
-     }
+    if (mState.pump1ActiveBit0 || mState.pump1ActiveBit1) {
+        if (mState.pump1ActiveBit0 && mState.pump1ActiveBit1) {
+            addedWater += 2 * PUMP1_FLOWRATE * delta;
+        } else {
+            addedWater += PUMP1_FLOWRATE * delta;
+        }
+    }
+
+    if (mState.pump2ActiveBit0 || mState.pump2ActiveBit1) {
+        if (mState.pump2ActiveBit0 && mState.pump2ActiveBit1) {
+            addedWater += 2 * PUMP2_FLOWRATE * delta;
+        } else {
+            addedWater += PUMP2_FLOWRATE * delta;
+        }
+    }
  
      float removedWater = mCurrentDemandFlowrate * delta;
      this->log() << "Old volume: " << mState.volume << "; adding: " << addedWater
