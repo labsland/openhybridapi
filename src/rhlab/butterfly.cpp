@@ -5,6 +5,35 @@
 
 using namespace std;
 
+namespace {
+bool parseBoundedIndex(const string& s, size_t upperBound, size_t& index) {
+    if (s.empty() || upperBound == 0) {
+        return false;
+    }
+
+    size_t value = 0;
+    for (char c : s) {
+        if (c < '0' || c > '9') {
+            return false;
+        }
+        value = (value * 10) + static_cast<size_t>(c - '0');
+        if (value >= upperBound) {
+            return false;
+        }
+    }
+
+    index = value;
+    return true;
+}
+
+string safeSubstring(const string& s, int start, int length) {
+    if (start < 0 || start >= static_cast<int>(s.size())) {
+        return "";
+    }
+    return s.substr(static_cast<size_t>(start), static_cast<size_t>(length));
+}
+}
+
 void ButterflySimulation::initialize(){
 
     // this->targetDevice.setGpio(0, true); //first output gpio
@@ -66,44 +95,60 @@ void ButterflySimulation::print_led_states(){
 
 // Converts LT or LF to a boolean True or False
 bool ButterflySimulation::read_literal_logic(string s){
-    return s[0] == 'T';
+    return !s.empty() && s[0] == 'T';
 }
 
 // Converts ST or SF to a boolean True or False
 bool ButterflySimulation::read_switch_logic(string s){
-    return s[0] == 'T';
+    return !s.empty() && s[0] == 'T';
 }
 
 // From a string that provdes the gpio index (i.e. g02), obtain the current GPIO value
 bool ButterflySimulation::read_gpio_logic(string s){
-    int index = stoi(s);
-    this->input_gpio_tracker[index] = this->targetDevice->getGpio(index);
-    return this->targetDevice->getGpio(index);
+    size_t index = 0;
+    if (!parseBoundedIndex(s, this->input_gpio_tracker.size(), index)) {
+        return false;
+    }
+    int position = static_cast<int>(index);
+    this->input_gpio_tracker[index] = this->targetDevice->getGpio(position);
+    return this->targetDevice->getGpio(position);
 }
 
 // From a string that provides the gpio index (i.e. g02), set the current GPIO value
 void ButterflySimulation::update_gpio_logic(string s, bool o){
-    int index = stoi(s);
+    size_t index = 0;
+    if (!parseBoundedIndex(s, this->output_gpio_tracker.size(), index)) {
+        return;
+    }
     this->output_gpio_tracker[index] = o;
-    this->targetDevice->setGpio(index, o);
+    this->targetDevice->setGpio(static_cast<int>(index), o);
 
 }
 
 // From a string that provides the buffer index (i.e. b0), obtain the current buffer value
 bool ButterflySimulation::read_buffer_logic(string s){
-    int index = stoi(s);
+    size_t index = 0;
+    if (!parseBoundedIndex(s, this->buffer.size(), index)) {
+        return false;
+    }
     return this->buffer[index];
 }
 
 // From a string that provides the buffer index (i.e. b0), set the current buffer value
 void ButterflySimulation::update_buffer_logic(string s, bool o){
-    int index = stoi(s);
+    size_t index = 0;
+    if (!parseBoundedIndex(s, this->buffer.size(), index)) {
+        return;
+    }
     this->buffer[index] = o;
 }
 
 // From a string that provides the led index (i.e. d0), set the current led value
 void ButterflySimulation::update_led_logic(string s, bool o){
-    int index = stoi(s);
+    size_t index = 0;
+    if (!parseBoundedIndex(s, LED_ARRAY_SIZE, index)) {
+        return;
+    }
     mState.virtual_led[index] = o;
     // requestReportState();
 }
@@ -157,24 +202,24 @@ int ButterflySimulation::read_gate_output(string substring){
 // connected to a power rail, switch, gpio, or buffer
 bool ButterflySimulation::handle_input(string substring, int &start_index){
     int p;
-    p = read_gate_input(substring.substr(start_index++, 1));
+    p = read_gate_input(safeSubstring(substring, start_index++, 1));
     bool my_input = 0;
     int temp = start_index;
     switch(p){
         case IS_LITERAL:
-            my_input = read_literal_logic(substring.substr(temp, IS_LITERAL_NEXT_CHAR_SIZE));
+            my_input = read_literal_logic(safeSubstring(substring, temp, IS_LITERAL_NEXT_CHAR_SIZE));
             start_index += IS_LITERAL_NEXT_CHAR_SIZE;
             break;
         case IS_SWITCH:
-            my_input = read_switch_logic(substring.substr(temp, IS_SWITCH_NEXT_CHAR_SIZE));
+            my_input = read_switch_logic(safeSubstring(substring, temp, IS_SWITCH_NEXT_CHAR_SIZE));
             start_index += IS_SWITCH_NEXT_CHAR_SIZE;
             break;
         case IS_GPIO:
-            my_input = read_gpio_logic(substring.substr(temp, IS_GPIO_NEXT_CHAR_SIZE));
+            my_input = read_gpio_logic(safeSubstring(substring, temp, IS_GPIO_NEXT_CHAR_SIZE));
             start_index += IS_GPIO_NEXT_CHAR_SIZE;
             break;
         case IS_BUFFER:
-            my_input = read_buffer_logic(substring.substr(temp, IS_BUFFER_NEXT_CHAR_SIZE));
+            my_input = read_buffer_logic(safeSubstring(substring, temp, IS_BUFFER_NEXT_CHAR_SIZE));
             start_index += IS_BUFFER_NEXT_CHAR_SIZE;
             break;
         default:
@@ -187,19 +232,19 @@ bool ButterflySimulation::handle_input(string substring, int &start_index){
 // connected to a gpio, buffer, or led
 void ButterflySimulation::handle_output(string substring, int &start_index, bool logic_gate_output){
     int p;
-    p = read_gate_output(substring.substr(start_index++, 1));
+    p = read_gate_output(safeSubstring(substring, start_index++, 1));
     int temp = start_index;
     switch(p){
         case IS_GPIO:
-            update_gpio_logic(substring.substr(temp, IS_GPIO_NEXT_CHAR_SIZE), logic_gate_output);
+            update_gpio_logic(safeSubstring(substring, temp, IS_GPIO_NEXT_CHAR_SIZE), logic_gate_output);
             start_index += IS_GPIO_NEXT_CHAR_SIZE;
             break;
         case IS_BUFFER:
-            update_buffer_logic(substring.substr(temp, IS_BUFFER_NEXT_CHAR_SIZE), logic_gate_output);
+            update_buffer_logic(safeSubstring(substring, temp, IS_BUFFER_NEXT_CHAR_SIZE), logic_gate_output);
             start_index += IS_BUFFER_NEXT_CHAR_SIZE;
             break;
         case IS_LED:
-            update_led_logic(substring.substr(temp, IS_LED_NEXT_CHAR_SIZE), logic_gate_output);
+            update_led_logic(safeSubstring(substring, temp, IS_LED_NEXT_CHAR_SIZE), logic_gate_output);
             start_index += IS_LED_NEXT_CHAR_SIZE;
             break;
         default:
@@ -210,6 +255,10 @@ void ButterflySimulation::handle_output(string substring, int &start_index, bool
 // Reads a logic gate section and digitally computes the new output logic
 // state, depending on the inputs to that logic gate
 int ButterflySimulation::read_logic_gate(string substring){
+    if (substring.empty()) {
+        return 0;
+    }
+
     int start_index = 0;
     bool logic_gate_input_1 = false;
     bool logic_gate_input_2 = false;
@@ -226,7 +275,7 @@ int ButterflySimulation::read_logic_gate(string substring){
 
         // Handle output portion
         handle_output(substring, start_index, logic_gate_output);
-        while(substring[start_index] == ','){
+        while(start_index < static_cast<int>(substring.size()) && substring[start_index] == ','){
             start_index++;
             handle_output(substring, start_index, logic_gate_output);
         }
@@ -243,7 +292,7 @@ int ButterflySimulation::read_logic_gate(string substring){
 
         // Handle output portion
         handle_output(substring, start_index, logic_gate_output);
-        while(substring[start_index] == ','){
+        while(start_index < static_cast<int>(substring.size()) && substring[start_index] == ','){
             start_index++;
             handle_output(substring, start_index, logic_gate_output);
         }
@@ -260,7 +309,7 @@ int ButterflySimulation::read_logic_gate(string substring){
 
         // Handle output portion
         handle_output(substring, start_index, logic_gate_output);
-        while(substring[start_index] == ','){
+        while(start_index < static_cast<int>(substring.size()) && substring[start_index] == ','){
             start_index++;
             handle_output(substring, start_index, logic_gate_output);
         }
@@ -277,7 +326,7 @@ int ButterflySimulation::read_logic_gate(string substring){
 
         // Handle output portion
         handle_output(substring, start_index, logic_gate_output);
-        while(substring[start_index] == ','){
+        while(start_index < static_cast<int>(substring.size()) && substring[start_index] == ','){
             start_index++;
             handle_output(substring, start_index, logic_gate_output);
         }
@@ -293,10 +342,13 @@ int ButterflySimulation::read_logic_gate(string substring){
 
         // Handle output portion
         handle_output(substring, start_index, logic_gate_output);
-        while(substring[start_index] == ','){
+        while(start_index < static_cast<int>(substring.size()) && substring[start_index] == ','){
             start_index++;
             handle_output(substring, start_index, logic_gate_output);
         }
+    }
+    else{
+        return 1;
     }
 
     return start_index;
@@ -332,8 +384,9 @@ void ButterflySimulation::update(double delta){
         this->log() << "My string: " << my_string << endl;
         this->log() << "Iter " << while_loop_counter << " : " << my_string.substr(index, my_string_length - index);
         while_loop_counter++;
-        index += read_logic_gate(my_string.substr(index, my_string_length - index));
-        if(my_string[index] == ';' || my_string[index] == '\n'){
+        int consumed = read_logic_gate(my_string.substr(index, my_string_length - index));
+        index += consumed > 0 ? consumed : 1;
+        if(index < my_string_length && (my_string[index] == ';' || my_string[index] == '\n')){
             index = index + 1;
         }
     }

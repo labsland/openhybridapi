@@ -12,6 +12,8 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <functional>
+#include <utility>
 
 #include "../utils/timemanager.h"
 #include "utils/communicator.h"
@@ -110,6 +112,11 @@ class Simulation
         std::shared_ptr<LabsLand::Utils::TargetDevice> targetDevice = nullptr;
         std::weak_ptr<LabsLand::Simulations::Utils::SimulationCommunicator<OutputDataType, InputDataType>> communicator;
         bool mShouldReportInReportWhenMarkedMode = false;
+        std::function<bool()> mStopRequested = []() { return false; };
+
+        bool stopRequested() const {
+            return mStopRequested && mStopRequested();
+        }
 
         /**
          * Retrieves a request or interaction from the user interface, if any is available. If one was available
@@ -215,6 +222,15 @@ class Simulation
          */
         void injectTargetDevice(std::shared_ptr<LabsLand::Utils::TargetDevice> targetDevice) {
             this->targetDevice = targetDevice;
+        }
+
+        /*
+         * Simulations may execute tight GPIO polling loops. This hook lets
+         * those loops observe plugin disposal so embedded controllers can stop
+         * a simulation instead of trapping the caller in teardown.
+         */
+        void injectStopRequested(std::function<bool()> stopRequested) {
+            this->mStopRequested = std::move(stopRequested);
         }
 
         /*

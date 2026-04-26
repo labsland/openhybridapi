@@ -65,6 +65,9 @@ namespace RHLab::LEDMatrix {
     };
 
     class MatrixSimulation : public Simulation<MatrixData, MatrixRequest> {
+        private:
+            bool waitForGpioValue(const string& gpio, bool expectedValue);
+
         public:
             MatrixSimulation() = default;
             void update(double delta) override;

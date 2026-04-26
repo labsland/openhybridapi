@@ -13,11 +13,22 @@ void MatrixSimulation::initialize(){
     setReportWhenMarked(true);
 }
 
+bool MatrixSimulation::waitForGpioValue(const string& gpio, bool expectedValue) {
+    while (!this->stopRequested()) {
+        if (this->targetDevice->getGpio(gpio) == expectedValue) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool MatrixSimulation::readSerialCommunication(vector<vector<bool>>& buffer, vector<string>& gpios) {
     try {
         for (int i = 0; i < buffer.size(); i++) { // reading 2 at a time
             // Wait for a rising edge on the pulse GPIO
-            while (this->targetDevice->getGpio("pulse") == 0) {}
+            if (!waitForGpioValue("pulse", 1)) {
+                return false;
+            }
 
             // Read the data bit when the pulse is high
             for (int j = 0; j < buffer[i].size(); j++) {
@@ -25,7 +36,9 @@ bool MatrixSimulation::readSerialCommunication(vector<vector<bool>>& buffer, vec
                 this->log() << "buffer[" << i << "][ " << j << "] = " << ((buffer[i][j] == true)?"1":"0") << "; // " << gpios[j] << endl;
             }
             // Wait for the pulse to go low again before reading the next bit
-            while (this->targetDevice->getGpio("pulse") == 1) {}
+            if (!waitForGpioValue("pulse", 0)) {
+                return false;
+            }
         }
     } catch (exception e) {
         // TODO: add some form of exception dump or handling
@@ -48,7 +61,9 @@ void MatrixSimulation::update(double delta) {
     vector<vector<bool>> targetDeviceInputData(ROWS * COLS, vector<bool>(BITS_PER_LED, false));
 
     // Wait for latch to become 0
-    while (this->targetDevice->getGpio("latch") == 1) {}
+    if (!waitForGpioValue("latch", 0)) {
+        return;
+    }
 
     // Process the received data and update the matrix
     if (readSerialCommunication(targetDeviceInputData, inputGPIOs)) {
