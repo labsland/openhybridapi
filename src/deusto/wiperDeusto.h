@@ -7,21 +7,23 @@
 #include <vector>
 
 struct WiperDeustoData : public BaseOutputDataType {
-    bool move = false;
+    bool moving;
+    float wiperAngle;
+    bool leftSensor;
+    bool rightSensor;
 
     std::string serialize() const {
         std::stringstream stream;
-        stream << move << "&";
+        stream << moving << "&" << wiperAngle << "&" << leftSensor << "&" << rightSensor;
         return stream.str();
     }
 };
 
 struct WiperDeustoRequest : public BaseInputDataType {
-    bool rainSensor = false;
-    bool leftSensor = false;
-    bool rightSensor = false;
-    bool mButton = false;
-    bool pButton = false;
+    bool rainSensor;
+    bool mButton;
+    bool pButton;
+    bool error;
 
     bool deserialize(std::string const & input) {
         std::stringstream stream(input);
@@ -32,7 +34,7 @@ struct WiperDeustoRequest : public BaseInputDataType {
             segments.push_back(segment);
         }
 
-        if (segments.size() != 5) {
+        if (segments.size() != 4) {
             return false;
         }
 
@@ -49,14 +51,19 @@ struct WiperDeustoRequest : public BaseInputDataType {
         };
 
         return parseBit(segments[0], rainSensor)
-            && parseBit(segments[1], rightSensor)
-            && parseBit(segments[2], leftSensor)
-            && parseBit(segments[3], mButton)
-            && parseBit(segments[4], pButton);
+            && parseBit(segments[1], mButton)
+            && parseBit(segments[2], pButton)
+            && parseBit(segments[3], error);
     }
 };
 
 class WiperDeustoSimulation : public Simulation<WiperDeustoData, WiperDeustoRequest> {
+private:
+    const float MIN_ANGLE = 5.0f;
+    const float MAX_ANGLE = 160.0f;
+    const float SPEED = 25.0f;
+    int mDirection;
+    bool forcedError = false;
 public:
     WiperDeustoSimulation() = default;
 
