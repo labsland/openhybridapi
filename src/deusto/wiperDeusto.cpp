@@ -4,7 +4,7 @@
 
 void WiperDeustoSimulation::initialize() {
     this->targetDevice->initializeSimulation(
-        {"rainSensor", "leftSensor", "rightSensor", "mButton", "pButton"},
+        {"rainSensor", "rightSensor", "leftSensor", "mButton", "pButton"},
         {"move"}
     );
 
@@ -52,34 +52,18 @@ void WiperDeustoSimulation::update(double delta) {
         mDirection = 1;
     }
 
-    if (forcedError)
-    {
-        mState.leftSensor = 1;
-        mState.rightSensor = 1;
-    } 
-    else {
-
-        if (mState.wiperAngle >= MIN_ANGLE &&
-            mState.wiperAngle <= MIN_ANGLE+15.0f)
-        {
-            mState.rightSensor = 1;
-        }
-        else
-        {
-            mState.rightSensor = 0;
-        }
-
-        if (mState.wiperAngle >= MAX_ANGLE-15.0f &&
-            mState.wiperAngle <= MAX_ANGLE)
-        {
-            mState.leftSensor = 1;
-        }
-        else
-        {
-            mState.leftSensor = 0;
-        }
-
+    if (forcedError) {
+        mState.leftSensor = true;
+        mState.rightSensor = true;
+    } else {
+        mState.rightSensor = mState.wiperAngle >= MIN_ANGLE &&
+                             mState.wiperAngle <= MIN_ANGLE + 15.0f;
+        mState.leftSensor = mState.wiperAngle >= MAX_ANGLE - 15.0f &&
+                            mState.wiperAngle <= MAX_ANGLE;
     }
+
+    this->targetDevice->setGpio("rightSensor", mState.rightSensor);
+    this->targetDevice->setGpio("leftSensor", mState.leftSensor);
 
     this->log() << "Angle: " << mState.wiperAngle << std::endl;
     this->log() << "LeftSensor: " << mState.leftSensor << std::endl;
