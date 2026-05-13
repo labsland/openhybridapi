@@ -7,21 +7,23 @@
 #include <vector>
 
 struct WiperDeustoData : public BaseOutputDataType {
-    bool move = false;
+    bool moving = false;
+    float wiperAngle = 0.0f;
+    bool leftSensor = false;
+    bool rightSensor = false;
 
     std::string serialize() const {
         std::stringstream stream;
-        stream << move << "&";
+        stream << moving << "&" << wiperAngle << "&" << leftSensor << "&" << rightSensor;
         return stream.str();
     }
 };
 
 struct WiperDeustoRequest : public BaseInputDataType {
     bool rainSensor = false;
-    bool leftSensor = false;
-    bool rightSensor = false;
     bool mButton = false;
     bool pButton = false;
+    bool error = false;
 
     bool deserialize(std::string const & input) {
         std::stringstream stream(input);
@@ -30,10 +32,6 @@ struct WiperDeustoRequest : public BaseInputDataType {
 
         while (std::getline(stream, segment, '&')) {
             segments.push_back(segment);
-        }
-
-        if (segments.size() != 5) {
-            return false;
         }
 
         auto parseBit = [](std::string const & token, bool & out) {
@@ -48,15 +46,31 @@ struct WiperDeustoRequest : public BaseInputDataType {
             return false;
         };
 
-        return parseBit(segments[0], rainSensor)
-            && parseBit(segments[1], rightSensor)
-            && parseBit(segments[2], leftSensor)
-            && parseBit(segments[3], mButton)
-            && parseBit(segments[4], pButton);
+        if (segments.size() == 4) {
+            return parseBit(segments[0], rainSensor)
+                && parseBit(segments[1], mButton)
+                && parseBit(segments[2], pButton)
+                && parseBit(segments[3], error);
+        }
+
+        if (segments.size() == 5) {
+            error = false;
+            return parseBit(segments[0], rainSensor)
+                && parseBit(segments[3], mButton)
+                && parseBit(segments[4], pButton);
+        }
+
+        return false;
     }
 };
 
 class WiperDeustoSimulation : public Simulation<WiperDeustoData, WiperDeustoRequest> {
+private:
+    const float MIN_ANGLE = 5.0f;
+    const float MAX_ANGLE = 160.0f;
+    const float SPEED = 25.0f;
+    int mDirection;
+    bool forcedError = false;
 public:
     WiperDeustoSimulation() = default;
 
