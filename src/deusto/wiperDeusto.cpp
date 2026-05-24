@@ -57,8 +57,8 @@ void WiperDeustoSimulation::update(double delta) {
         mState.rightSensor = true;
     } else {
         mState.rightSensor = mState.wiperAngle >= MIN_ANGLE &&
-                             mState.wiperAngle <= MIN_ANGLE + 15.0f;
-        mState.leftSensor = mState.wiperAngle >= MAX_ANGLE - 15.0f &&
+                             mState.wiperAngle <= MIN_ANGLE + 10.0f;
+        mState.leftSensor = mState.wiperAngle >= MAX_ANGLE - 10.0f &&
                             mState.wiperAngle <= MAX_ANGLE;
     }
 
