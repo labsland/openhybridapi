@@ -211,6 +211,7 @@ void AirportWindStationSimulation::beginReset() {
     nacelleAngle = 0.0;
     rotorLevel = 0.0;
     unsafeDuration = 0.0;
+    hasPendingRequest = false;
 }
 
 void AirportWindStationSimulation::chooseNextBearing() {
@@ -227,8 +228,6 @@ void AirportWindStationSimulation::chooseNextBearing() {
 
 void AirportWindStationSimulation::applyScenario(AirportWindScenario scenario) {
     mState.scenario = scenario;
-    resetAsserted = false;
-    resetRemaining = 0.0;
     mState.notice = AirportWindNotice::None;
     unsafeDuration = 0.0;
 
@@ -258,6 +257,22 @@ void AirportWindStationSimulation::applyRequest(AirportWindStationRequest const 
         return;
     }
 
+    if (hasPendingRequest) {
+        // The browser protocol permits one outstanding request. A retry of the
+        // deferred request must not enqueue or apply it twice, while a newer
+        // request remains unacknowledged so its normal retry can be handled
+        // once the pending request has completed.
+        requestReportState();
+        return;
+    }
+
+    if (resetAsserted && request.action == AirportWindAction::Scenario) {
+        pendingRequest = request;
+        hasPendingRequest = true;
+        requestReportState();
+        return;
+    }
+
     mState.activeRequestId = request.requestId;
     switch (request.action) {
         case AirportWindAction::Sync:
@@ -271,6 +286,18 @@ void AirportWindStationSimulation::applyRequest(AirportWindStationRequest const 
         case AirportWindAction::Invalid:
             return;
     }
+    requestReportState();
+}
+
+void AirportWindStationSimulation::applyPendingRequest() {
+    if (!hasPendingRequest) {
+        return;
+    }
+
+    AirportWindStationRequest request = pendingRequest;
+    hasPendingRequest = false;
+    mState.activeRequestId = request.requestId;
+    applyScenario(request.scenario);
     requestReportState();
 }
 
@@ -432,6 +459,7 @@ bool AirportWindStationSimulation::stateChangedFrom(AirportWindStationData const
 
 void AirportWindStationSimulation::update(double delta) {
     AirportWindStationData previous = mState;
+    bool resetWasAssertedAtUpdateStart = resetAsserted;
 
     AirportWindStationRequest request;
     if (readRequest(request)) {
@@ -440,17 +468,21 @@ void AirportWindStationSimulation::update(double delta) {
 
     sampleControllerOutputs();
 
-    if (resetAsserted) {
+    bool resetActiveForThisStep = resetAsserted;
+    if (resetAsserted && resetWasAssertedAtUpdateStart) {
         if (delta + 1e-9 >= resetRemaining) {
             resetRemaining = 0.0;
             resetAsserted = false;
+            applyPendingRequest();
         } else {
             resetRemaining -= delta;
         }
     }
 
-    updateYaw(delta);
-    updateRotor(delta);
+    if (!resetActiveForThisStep) {
+        updateYaw(delta);
+        updateRotor(delta);
+    }
     updatePhase();
     updateNotice(delta);
     writePlantOutputs();

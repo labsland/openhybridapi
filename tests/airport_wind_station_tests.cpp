@@ -217,20 +217,86 @@ void testInitializationAndHeartbeat() {
 
 void testResetTimingAndSerializedRequests() {
     Fixture fixture;
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=18&action=sync"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.activeRequestId == 18);
+    CHECK(fixture.simulation.mState.phase == AirportWindPhase::Reset);
+    CHECK(fixture.target->plantOutputs[0]);
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=19&action=scenario&name=steady"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.activeRequestId == 18);
+    CHECK(fixture.simulation.mState.windBand == AirportWindBand::Calm);
+    CHECK(fixture.simulation.mState.phase == AirportWindPhase::Reset);
+
+    // A retry with the same ID remains deferred and cannot shorten reset.
+    CHECK(fixture.communicator->enqueue("v=1&requestId=19&action=scenario&name=steady"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.activeRequestId == 18);
+    CHECK(fixture.simulation.mState.windBand == AirportWindBand::Calm);
+
+    fixture.advance(99, 99);
+    CHECK(fixture.target->plantOutputs[0]);
+    CHECK(fixture.simulation.mState.windBand == AirportWindBand::Calm);
+    fixture.tick(1);
+    CHECK(!fixture.target->plantOutputs[0]);
+    CHECK(fixture.simulation.mState.activeRequestId == 19);
+    CHECK(fixture.simulation.mState.windBand == AirportWindBand::Steady);
+
+    // A reset requested after initialization also receives a full observable
+    // 250 ms pulse; retrying the same ID must not restart that pulse.
+    CHECK(fixture.communicator->enqueue("v=1&requestId=20&action=reset"));
+    fixture.tick(50);
+    CHECK(fixture.target->plantOutputs[0]);
+    fixture.advance(100);
+    CHECK(fixture.communicator->enqueue("v=1&requestId=20&action=reset"));
+    fixture.tick(50);
+    fixture.advance(99, 99);
+    CHECK(fixture.target->plantOutputs[0]);
+    fixture.tick(1);
+    CHECK(!fixture.target->plantOutputs[0]);
+    CHECK(fixture.simulation.mState.phase == AirportWindPhase::Calm);
+}
+
+void testScenarioRequestOrderAcrossReset() {
+    Fixture fixture;
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=20&action=scenario&name=steady"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.activeRequestId == 0);
+
+    // A distinct request cannot overtake the deferred scenario. It remains
+    // unacknowledged and can be retried once request 20 has completed.
+    CHECK(fixture.communicator->enqueue("v=1&requestId=21&action=sync"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.activeRequestId == 0);
+
+    fixture.advance(150);
+    CHECK(fixture.simulation.mState.activeRequestId == 20);
+    CHECK(fixture.simulation.mState.windBand == AirportWindBand::Steady);
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=21&action=sync"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.activeRequestId == 21);
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=22&action=scenario&name=highWind"));
+    CHECK(fixture.communicator->enqueue("v=1&requestId=23&action=scenario&name=calm"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.activeRequestId == 22);
+    CHECK(fixture.simulation.mState.windBand == AirportWindBand::High);
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.activeRequestId == 23);
+    CHECK(fixture.simulation.mState.windBand == AirportWindBand::Calm);
+}
+
+void testInitializationResetBoundary() {
+    Fixture fixture;
     fixture.advance(249, 249);
     CHECK(fixture.target->plantOutputs[0]);
     fixture.tick(1);
     CHECK(!fixture.target->plantOutputs[0]);
     CHECK(fixture.simulation.mState.phase == AirportWindPhase::Calm);
-
-    CHECK(fixture.communicator->enqueue("v=1&requestId=20&action=scenario&name=steady"));
-    CHECK(fixture.communicator->enqueue("v=1&requestId=21&action=scenario&name=highWind"));
-    fixture.tick(50);
-    CHECK(fixture.simulation.mState.activeRequestId == 20);
-    CHECK(fixture.simulation.mState.windBand == AirportWindBand::Steady);
-    fixture.tick(50);
-    CHECK(fixture.simulation.mState.activeRequestId == 21);
-    CHECK(fixture.simulation.mState.windBand == AirportWindBand::High);
 }
 
 void testGenerationGatesAndHighWindOverride() {
@@ -339,6 +405,8 @@ int main() {
     testCompleteSerialization();
     testInitializationAndHeartbeat();
     testResetTimingAndSerializedRequests();
+    testScenarioRequestOrderAcrossReset();
+    testInitializationResetBoundary();
     testGenerationGatesAndHighWindOverride();
     testCompleteScenarioFlow();
 

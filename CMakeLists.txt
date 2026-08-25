@@ -33,4 +33,10 @@ if(BUILD_TESTING)
     )
     target_include_directories(airport_wind_station_tests PRIVATE src)
     add_test(NAME airport_wind_station_tests COMMAND airport_wind_station_tests)
+
+    add_test(NAME embedded_manifest_airport_wind_station
+        COMMAND ${CMAKE_COMMAND}
+            -DMANIFEST=${CMAKE_CURRENT_SOURCE_DIR}/simulations.cmake
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/embedded_manifest_test.cmake
+    )
 endif()

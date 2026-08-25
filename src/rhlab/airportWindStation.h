@@ -111,8 +111,11 @@ private:
     bool sampledGeneratorEnable = false;
     bool sampledActive = false;
     bool sampledRunwayWindAlert = false;
+    bool hasPendingRequest = false;
+    AirportWindStationRequest pendingRequest;
 
     void applyRequest(AirportWindStationRequest const & request);
+    void applyPendingRequest();
     void applyScenario(AirportWindScenario scenario);
     void beginReset();
     void chooseNextBearing();

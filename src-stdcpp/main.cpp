@@ -77,7 +77,17 @@ class ConcreteSimulationRunner : public SimulationRunner {
 
                     cout << "[" << timeString.substr(0, timeString.size() - 1) << "] Running _update()" << endl;
                     simulation._update();
-                    this_thread::sleep_for (chrono::milliseconds(100));
+                    std::uint32_t sleepStepInMs = simulation.getSleepStepInMs();
+                    std::uint32_t sleepStepInUs = simulation.getSleepStepInUs();
+                    if (sleepStepInMs != 0) {
+                        this_thread::sleep_for(chrono::milliseconds(sleepStepInMs));
+                    } else if (sleepStepInUs != 0) {
+                        this_thread::sleep_for(chrono::microseconds(sleepStepInUs));
+                    } else {
+                        // Preserve the desktop runner's existing pacing for
+                        // simulations that do not provide a sleep hook.
+                        this_thread::sleep_for(chrono::milliseconds(100));
+                    }
                 }
             } else {
                 cerr << "Unsupported mode: " << mode << endl;
