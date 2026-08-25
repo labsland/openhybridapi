@@ -1,5 +1,5 @@
-name: Airport Wind Station & Turbine Safety
-description: E E 271 finite-state-machine wind turbine activity
+name: Airport Wind Station
+description: Wind turbine alignment, generation, and high-wind safety activity
 iframe:
   url: http://localhost:5173/ThreeJs/
   height: 760
