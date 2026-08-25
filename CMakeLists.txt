@@ -19,6 +19,18 @@ add_executable(hybridapi
     src/deusto/wiperDeusto.cpp
     src/deusto/wiper2BitDeusto.cpp
     src/rhlab/butterfly.cpp
+    src/rhlab/airportWindStation.cpp
     src/rhlab/matrix.cpp
     src/rhlab/morse.cpp
 )
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(airport_wind_station_tests
+        tests/airport_wind_station_tests.cpp
+        src/labsland/simulations/targetdevice.cpp
+        src/rhlab/airportWindStation.cpp
+    )
+    target_include_directories(airport_wind_station_tests PRIVATE src)
+    add_test(NAME airport_wind_station_tests COMMAND airport_wind_station_tests)
+endif()

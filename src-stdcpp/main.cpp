@@ -10,6 +10,7 @@
 #include <chrono>
 #include "labsland/simulations/watertanksimulation.h"
 #include "rhlab/butterfly.h"
+#include "rhlab/airportWindStation.h"
 #include "rhlab/matrix.h"
 #include "rhlab/morse.h"
 #include "deusto/door.h"
@@ -127,6 +128,8 @@ int main(int argc, char * argv[]) {
         runner = new ConcreteSimulationRunner<Wiper2BitDeustoSimulation, Wiper2BitDeustoData, Wiper2BitDeustoRequest>(configuration, mode);
     } else if (simulation == "morse") {
         runner = new ConcreteSimulationRunner< RHLab::Morse::MorseSimulation, RHLab::Morse::MorseData, RHLab::Morse::MorseRequest>(configuration, mode);
+    } else if (simulation == "airportWindStation") {
+        runner = new ConcreteSimulationRunner<AirportWindStationSimulation, AirportWindStationData, AirportWindStationRequest>(configuration, mode);
     }
     else {
         cerr << "Invalid simulation: '" << simulation << "'. Use a valid name" << endl;
