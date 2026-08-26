@@ -18,6 +18,28 @@ Note that the 3D environments are not part of what is referred to as "simulation
 system and are loaded by the Server's web interface, but separate from the Simulation, and are instead referred to as
 "Visualization" or "3D environment".
 
+### Included public simulations
+
+This catalog is intentionally limited to the C++ implementations included by
+[`simulations.cmake`](simulations.cmake). A development-server configuration
+on its own does not mean that the corresponding simulation implementation is
+part of this public repository.
+
+<!-- public-simulation-catalog:start -->
+| Runner ID | Purpose | Implementation | Development-server configuration |
+| --- | --- | --- | --- |
+| `watertank` | Liquid-level control with two pumps and three level sensors | [`watertanksimulation.cpp`](src/labsland/simulations/watertanksimulation.cpp) | [`watertank.yml`](server/simulations/watertank.yml) |
+| `butterfly` | Breadboard and digital-logic activity for DE1-SoC and STM32WB55RG | [`butterfly.cpp`](src/rhlab/butterfly.cpp) | [`butterfly.yml`](server/simulations/butterfly.yml), [`butterfly-stm32-wb55rg.yml`](server/simulations/butterfly-stm32-wb55rg.yml) |
+| `airportWindStation` | Wind-turbine alignment, generation, and high-wind safety | [`airportWindStation.cpp`](src/rhlab/airportWindStation.cpp) | [`airportWindStation.yml`](server/simulations/airportWindStation.yml) |
+| `matrix` | Serialized two-color LED-matrix output | [`matrix.cpp`](src/rhlab/matrix.cpp) | [`matrix.yml`](server/simulations/matrix.yml) |
+| `morse` | Single-line Morse signaling | [`morse.cpp`](src/rhlab/morse.cpp) | [`morse.yml`](server/simulations/morse.yml) |
+| `door` | Automatic-door control with position and presence sensors | [`door.cpp`](src/deusto/door.cpp) | [`door.yml`](server/simulations/door.yml) |
+| `watertankDeusto` | Water-tank control with multi-speed pumps and thermal state | [`watertankDeusto.cpp`](src/deusto/watertankDeusto.cpp) | [`watertankDeusto.yml`](server/simulations/watertankDeusto.yml) |
+| `watertankDeustoNoTemperature` | Multi-speed water-tank control without pump-temperature channels | [`watertankDeustoNoTemperature.cpp`](src/deusto/watertankDeustoNoTemperature.cpp) | [`watertankDeustoNoTemperature.yml`](server/simulations/watertankDeustoNoTemperature.yml) |
+| `wiperDeusto` | Rain-sensing wiper control with a one-bit motion command | [`wiperDeusto.cpp`](src/deusto/wiperDeusto.cpp) | [`wiperDeusto.yml`](server/simulations/wiperDeusto.yml) |
+| `wiper2BitDeusto` | Rain-sensing wiper control with a two-bit motion command | [`wiper2BitDeusto.cpp`](src/deusto/wiper2BitDeusto.cpp) | [`wiper2BitDeusto.yml`](server/simulations/wiper2BitDeusto.yml) |
+<!-- public-simulation-catalog:end -->
+
 ### Airport Wind Station
 
 The Airport Wind Station is a deterministic wind-turbine control activity. A

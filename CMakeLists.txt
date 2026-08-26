@@ -39,4 +39,13 @@ if(BUILD_TESTING)
             -DMANIFEST=${CMAKE_CURRENT_SOURCE_DIR}/simulations.cmake
             -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/embedded_manifest_test.cmake
     )
+
+    add_test(NAME public_simulation_catalog
+        COMMAND ${CMAKE_COMMAND}
+            -DMANIFEST=${CMAKE_CURRENT_SOURCE_DIR}/simulations.cmake
+            -DREADME=${CMAKE_CURRENT_SOURCE_DIR}/README.md
+            -DRUNNER=${CMAKE_CURRENT_SOURCE_DIR}/src-stdcpp/main.cpp
+            -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/public_simulation_catalog_test.cmake
+    )
 endif()
