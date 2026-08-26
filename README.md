@@ -18,6 +18,59 @@ Note that the 3D environments are not part of what is referred to as "simulation
 system and are loaded by the Server's web interface, but separate from the Simulation, and are instead referred to as
 "Visualization" or "3D environment".
 
+### Airport Wind Station
+
+The Airport Wind Station is a deterministic wind-turbine control activity. A
+controller must align the nacelle before enabling generation, realign it after
+a wind-direction change, and stop generation safely during high wind. The same
+board-neutral simulation contract supports DE1-SoC and STM32WB55RG activities.
+
+The public implementation is in
+[`src/rhlab/airportWindStation.h`](src/rhlab/airportWindStation.h) and
+[`src/rhlab/airportWindStation.cpp`](src/rhlab/airportWindStation.cpp). Its
+development-server configuration is
+[`server/simulations/airportWindStation.yml`](server/simulations/airportWindStation.yml),
+and its behavior is covered by
+[`tests/airport_wind_station_tests.cpp`](tests/airport_wind_station_tests.cpp).
+The companion [browser visualization](https://static-apps.labsland.com/simulations/airportWindStation/index.html)
+renders complete state reports produced by the simulation.
+
+The controller interface uses five logical slots in each direction:
+
+| Slot | Simulation to controller | Controller to simulation |
+| ---: | --- | --- |
+| 0 | `reset` | `align` |
+| 1 | `inputCode[0]` | reserved, driven low |
+| 2 | `inputCode[1]` | `generatorEnable` |
+| 3 | reserved, ignored | `active` |
+| 4 | `aligned` | `runwayWindAlert` |
+
+Browser commands select `calm`, `steady`, `realign`, or `highWind`, or request
+a reset. Versioned reports describe the complete observable plant and
+controller state, allowing the visualization to recover cleanly after a reload
+or reconnect.
+
+#### Credits and provenance
+
+- ZZ ([`zzyzzy42`](https://github.com/zzyzzy42)) created the original 3D
+  airport and wind-turbine assets and the visualization foundation.
+- Luis Rodríguez Gil developed the HybridAPI simulation, browser protocol,
+  firmware and infrastructure integration, and multi-platform implementation.
+- The activity was developed with the [Remote Hub Lab
+  (RHLAB)](https://rhlab.ece.uw.edu/) at the University of Washington and
+  integrated with LabsLand.
+- Professor Rania Hussein is RHLAB's principal investigator and lab leader and
+  serves as principal investigator for [REDTAIL (Remote Experimentation and
+  Digital Twinning for Accessible and Innovative
+  Learning)](https://redtail.rhlab.ece.uw.edu/).
+
+Development of the Airport Wind Station simulation and visualization was
+supported in part by the National Science Foundation through REDTAIL under
+[Award No. 2336745](https://www.nsf.gov/awardsearch/showAward?AWD_ID=2336745).
+Any opinions, findings, conclusions, or recommendations expressed here are
+those of the authors and do not necessarily reflect the views of the National
+Science Foundation.
+
 ## Terminology
 
 - *DUT*: Device Under Test. The device that the student controls. 
@@ -82,6 +135,3 @@ parent.postMessage({
 ```
 
 It should also be ready to receive and handle sim2web messages, for which it will need to listen for similar messages from within the iframe.
-
-
-
