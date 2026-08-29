@@ -61,16 +61,20 @@ The controller interface uses five logical slots in each direction:
 
 | Slot | Simulation to controller | Controller to simulation |
 | ---: | --- | --- |
-| 0 | `reset` | `align` |
+| 0 | legacy compatibility pulse; reserved by new controllers | `align` |
 | 1 | `inputCode[0]` | reserved, driven low |
 | 2 | `inputCode[1]` | `generatorEnable` |
 | 3 | reserved, ignored | `active` |
 | 4 | `aligned` | `runwayWindAlert` |
 
-Browser commands select `calm`, `steady`, `realign`, or `highWind`, or request
-a reset. Versioned reports describe the complete observable plant and
-controller state, allowing the visualization to recover cleanly after a reload
-or reconnect.
+Browser commands select `calm`, `steady`, `realign`, or `highWind`. The
+canonical `restart` action reinitializes only the simulated plant and preserves
+the sampled controller outputs. Controller reset belongs to the target: DE1
+uses its board/course reset input and STM uses the normal target reset path.
+During the compatibility release, the legacy `reset` action still emits the
+old 250 ms slot-0 pulse; new controllers ignore that slot. Versioned reports
+describe the complete observable plant and controller state, allowing the
+visualization to recover cleanly after a reload or reconnect.
 
 #### Credits and provenance
 

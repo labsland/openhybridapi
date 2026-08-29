@@ -151,10 +151,14 @@ void testRequestParsing() {
     CHECK(request.action == AirportWindAction::Scenario);
     CHECK(request.scenario == AirportWindScenario::HighWind);
 
+    CHECK(request.deserialize("v=1&requestId=44&action=restart"));
+    CHECK(request.action == AirportWindAction::Restart);
+
     CHECK(!request.deserialize("v=2&requestId=1&action=sync"));
     CHECK(!request.deserialize("v=1&requestId=0&action=sync"));
     CHECK(!request.deserialize("v=1&requestId=1&action=scenario&name=storm"));
     CHECK(!request.deserialize("v=1&requestId=1&action=reset&extra=1"));
+    CHECK(!request.deserialize("v=1&requestId=1&action=restart&extra=1"));
     CHECK(!request.deserialize("v=1&requestId=1&action=launch"));
     CHECK(!request.deserialize("v=1&requestId=1&action=scenario"));
     CHECK(!request.deserialize("v=1&requestId=4294967296&action=sync"));
@@ -257,6 +261,37 @@ void testResetTimingAndSerializedRequests() {
     fixture.tick(1);
     CHECK(!fixture.target->plantOutputs[0]);
     CHECK(fixture.simulation.mState.phase == AirportWindPhase::Calm);
+}
+
+void testPlantOnlyRestartPreservesControllerState() {
+    Fixture fixture;
+    fixture.advance(300);
+
+    fixture.target->controllerOutputs[0] = true;
+    fixture.target->controllerOutputs[2] = true;
+    fixture.target->controllerOutputs[3] = true;
+    fixture.target->controllerOutputs[4] = true;
+    fixture.tick(50);
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=24&action=restart"));
+    fixture.tick(50);
+
+    CHECK(!fixture.target->plantOutputs[0]);
+    CHECK(fixture.simulation.mState.phase == AirportWindPhase::Reset);
+    CHECK(fixture.simulation.mState.scenario == AirportWindScenario::Calm);
+    CHECK(fixture.simulation.mState.rotorBand == AirportRotorBand::Stopped);
+    CHECK(fixture.simulation.mState.align);
+    CHECK(fixture.simulation.mState.generatorEnable);
+    CHECK(fixture.simulation.mState.active);
+    CHECK(fixture.simulation.mState.runwayWindAlert);
+
+    fixture.advance(250);
+    CHECK(!fixture.target->plantOutputs[0]);
+    CHECK(fixture.simulation.mState.phase == AirportWindPhase::Calm);
+    CHECK(fixture.simulation.mState.align);
+    CHECK(fixture.simulation.mState.generatorEnable);
+    CHECK(fixture.simulation.mState.active);
+    CHECK(fixture.simulation.mState.runwayWindAlert);
 }
 
 void testScenarioRequestOrderAcrossReset() {
@@ -390,9 +425,9 @@ void testCompleteScenarioFlow() {
     CHECK(fixture.simulation.mState.rotorBand == AirportRotorBand::Stopped);
     CHECK(fixture.simulation.mState.notice == AirportWindNotice::UnsafeGenerator);
 
-    CHECK(fixture.communicator->enqueue("v=1&requestId=13&action=reset"));
+    CHECK(fixture.communicator->enqueue("v=1&requestId=13&action=restart"));
     fixture.tick(50);
-    CHECK(fixture.target->plantOutputs[0]);
+    CHECK(!fixture.target->plantOutputs[0]);
     CHECK(fixture.simulation.mState.phase == AirportWindPhase::Reset);
     CHECK(fixture.simulation.mState.activeRequestId == 13);
     CHECK(fixture.simulation.mState.notice == AirportWindNotice::None);
@@ -405,6 +440,7 @@ int main() {
     testCompleteSerialization();
     testInitializationAndHeartbeat();
     testResetTimingAndSerializedRequests();
+    testPlantOnlyRestartPreservesControllerState();
     testScenarioRequestOrderAcrossReset();
     testInitializationResetBoundary();
     testGenerationGatesAndHighWindOverride();

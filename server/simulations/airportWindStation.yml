@@ -5,6 +5,6 @@ iframe:
   height: 760
 gpios:
   sim2dut:
-    labels: [ reset, inputCode0, inputCode1, reservedLow, aligned ]
+    labels: [ legacyReset, inputCode0, inputCode1, reservedLow, aligned ]
   dut2sim:
     labels: [ align, reservedIgnored, generatorEnable, active, runwayWindAlert ]

@@ -10,6 +10,7 @@ enum class AirportWindAction : std::uint8_t {
     Invalid,
     Sync,
     Scenario,
+    Restart,
     Reset
 };
 
@@ -97,7 +98,8 @@ private:
     static const double UNSAFE_GRACE_SECONDS;
     static const double HEARTBEAT_SECONDS;
 
-    double resetRemaining = 0.0;
+    double initializationRemaining = 0.0;
+    double legacyResetRemaining = 0.0;
     double alignmentProgress = 0.0;
     double yawStartAngle = 0.0;
     double nacelleAngle = 0.0;
@@ -105,7 +107,8 @@ private:
     double unsafeDuration = 0.0;
     double heartbeatElapsed = 0.0;
 
-    bool resetAsserted = false;
+    bool initializationActive = false;
+    bool legacyResetAsserted = false;
     bool haveControllerSample = false;
     bool sampledAlign = false;
     bool sampledGeneratorEnable = false;
@@ -117,7 +120,7 @@ private:
     void applyRequest(AirportWindStationRequest const & request);
     void applyPendingRequest();
     void applyScenario(AirportWindScenario scenario);
-    void beginReset();
+    void beginRestart(bool assertLegacyReset);
     void chooseNextBearing();
     void sampleControllerOutputs();
     void updateYaw(double delta);

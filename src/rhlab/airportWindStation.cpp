@@ -142,6 +142,12 @@ bool AirportWindStationRequest::deserialize(std::string const & input) {
         return true;
     }
 
+    if (requestedAction->second == "restart") {
+        if (args.size() != 3) return false;
+        action = AirportWindAction::Restart;
+        return true;
+    }
+
     if (requestedAction->second == "scenario") {
         auto name = args.find("name");
         if (args.size() != 4 || name == args.end()) return false;
@@ -178,18 +184,20 @@ std::string AirportWindStationData::serialize() const {
 
 void AirportWindStationSimulation::initialize() {
     this->targetDevice->initializeSimulation(
-        {"reset", "inputCode0", "inputCode1", "reservedLow", "aligned"},
+        {"legacyReset", "inputCode0", "inputCode1", "reservedLow", "aligned"},
         {"align", "reservedIgnored", "generatorEnable", "active", "runwayWindAlert"}
     );
 
     setReportWhenMarked(true);
     setVirtualEnvironmentReportPeriod(0.050f);
-    beginReset();
+    // Keep the legacy controller-reset pulse at session start during the
+    // compatibility release. New controller wrappers ignore slot 0.
+    beginRestart(true);
     writePlantOutputs();
     requestReportState();
 }
 
-void AirportWindStationSimulation::beginReset() {
+void AirportWindStationSimulation::beginRestart(bool assertLegacyReset) {
     mState.scenario = AirportWindScenario::Calm;
     mState.phase = AirportWindPhase::Reset;
     mState.windDirection = 0;
@@ -198,14 +206,12 @@ void AirportWindStationSimulation::beginReset() {
     mState.nacelleAngle = 0;
     mState.targetAngle = 0;
     mState.rotorBand = AirportRotorBand::Stopped;
-    mState.align = false;
-    mState.generatorEnable = false;
-    mState.active = false;
-    mState.runwayWindAlert = false;
     mState.notice = AirportWindNotice::None;
 
-    resetAsserted = true;
-    resetRemaining = RESET_SECONDS;
+    initializationActive = true;
+    initializationRemaining = RESET_SECONDS;
+    legacyResetAsserted = assertLegacyReset;
+    legacyResetRemaining = assertLegacyReset ? RESET_SECONDS : 0.0;
     alignmentProgress = 0.0;
     yawStartAngle = 0.0;
     nacelleAngle = 0.0;
@@ -266,7 +272,7 @@ void AirportWindStationSimulation::applyRequest(AirportWindStationRequest const 
         return;
     }
 
-    if (resetAsserted && request.action == AirportWindAction::Scenario) {
+    if (initializationActive && request.action == AirportWindAction::Scenario) {
         pendingRequest = request;
         hasPendingRequest = true;
         requestReportState();
@@ -280,8 +286,11 @@ void AirportWindStationSimulation::applyRequest(AirportWindStationRequest const 
         case AirportWindAction::Scenario:
             applyScenario(request.scenario);
             break;
+        case AirportWindAction::Restart:
+            beginRestart(false);
+            break;
         case AirportWindAction::Reset:
-            beginReset();
+            beginRestart(true);
             break;
         case AirportWindAction::Invalid:
             return;
@@ -366,7 +375,7 @@ void AirportWindStationSimulation::updateRotor(double delta) {
 }
 
 void AirportWindStationSimulation::updatePhase() {
-    if (resetAsserted) {
+    if (initializationActive) {
         mState.phase = AirportWindPhase::Reset;
     } else if (mState.windBand == AirportWindBand::Calm) {
         mState.phase = AirportWindPhase::Calm;
@@ -385,7 +394,7 @@ void AirportWindStationSimulation::updatePhase() {
 }
 
 void AirportWindStationSimulation::updateNotice(double delta) {
-    if (resetAsserted) {
+    if (initializationActive) {
         unsafeDuration = 0.0;
         mState.notice = AirportWindNotice::None;
         return;
@@ -433,7 +442,7 @@ void AirportWindStationSimulation::writePlantOutputs() {
     if (mState.windBand == AirportWindBand::Steady) inputCode = 0x02;
     if (mState.windBand == AirportWindBand::High) inputCode = 0x03;
 
-    this->targetDevice->setGpio(0, resetAsserted);
+    this->targetDevice->setGpio(0, legacyResetAsserted);
     this->targetDevice->setGpio(1, (inputCode & 0x01u) != 0);
     this->targetDevice->setGpio(2, (inputCode & 0x02u) != 0);
     this->targetDevice->setGpio(3, false);
@@ -459,7 +468,8 @@ bool AirportWindStationSimulation::stateChangedFrom(AirportWindStationData const
 
 void AirportWindStationSimulation::update(double delta) {
     AirportWindStationData previous = mState;
-    bool resetWasAssertedAtUpdateStart = resetAsserted;
+    bool initializationWasActiveAtUpdateStart = initializationActive;
+    bool legacyResetWasAssertedAtUpdateStart = legacyResetAsserted;
 
     AirportWindStationRequest request;
     if (readRequest(request)) {
@@ -468,18 +478,27 @@ void AirportWindStationSimulation::update(double delta) {
 
     sampleControllerOutputs();
 
-    bool resetActiveForThisStep = resetAsserted;
-    if (resetAsserted && resetWasAssertedAtUpdateStart) {
-        if (delta + 1e-9 >= resetRemaining) {
-            resetRemaining = 0.0;
-            resetAsserted = false;
+    bool initializationActiveForThisStep = initializationActive;
+    if (initializationActive && initializationWasActiveAtUpdateStart) {
+        if (delta + 1e-9 >= initializationRemaining) {
+            initializationRemaining = 0.0;
+            initializationActive = false;
             applyPendingRequest();
         } else {
-            resetRemaining -= delta;
+            initializationRemaining -= delta;
         }
     }
 
-    if (!resetActiveForThisStep) {
+    if (legacyResetAsserted && legacyResetWasAssertedAtUpdateStart) {
+        if (delta + 1e-9 >= legacyResetRemaining) {
+            legacyResetRemaining = 0.0;
+            legacyResetAsserted = false;
+        } else {
+            legacyResetRemaining -= delta;
+        }
+    }
+
+    if (!initializationActiveForThisStep) {
         updateYaw(delta);
         updateRotor(delta);
     }
