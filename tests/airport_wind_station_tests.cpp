@@ -433,6 +433,40 @@ void testCompleteScenarioFlow() {
     CHECK(fixture.simulation.mState.notice == AirportWindNotice::None);
 }
 
+void testCalmRetainsLastBearingUntilRestart() {
+    Fixture fixture;
+    fixture.advance(300);
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=40&action=scenario&name=steady"));
+    fixture.tick(50);
+    fixture.target->controllerOutputs[0] = true;
+    fixture.target->controllerOutputs[3] = true;
+    fixture.advance(500);
+    std::int16_t lastDirection = fixture.simulation.mState.windDirection;
+    std::int16_t lastTarget = fixture.simulation.mState.targetAngle;
+    std::int16_t stoppedYaw = fixture.simulation.mState.nacelleAngle;
+    CHECK(lastDirection == 90);
+    CHECK(stoppedYaw > 0);
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=41&action=scenario&name=calm"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.windBand == AirportWindBand::Calm);
+    CHECK(fixture.simulation.mState.windDirection == lastDirection);
+    CHECK(fixture.simulation.mState.targetAngle == lastTarget);
+    CHECK(fixture.simulation.mState.nacelleAngle == stoppedYaw);
+    CHECK(!fixture.simulation.mState.aligned);
+    CHECK(fixture.target->plantOutputs[1]);
+    CHECK(!fixture.target->plantOutputs[2]);
+    fixture.advance(600);
+    CHECK(fixture.simulation.mState.nacelleAngle == stoppedYaw);
+
+    CHECK(fixture.communicator->enqueue("v=1&requestId=42&action=restart"));
+    fixture.tick(50);
+    CHECK(fixture.simulation.mState.windDirection == 0);
+    CHECK(fixture.simulation.mState.targetAngle == 0);
+    CHECK(fixture.simulation.mState.nacelleAngle == 0);
+}
+
 } // namespace
 
 int main() {
@@ -445,6 +479,7 @@ int main() {
     testInitializationResetBoundary();
     testGenerationGatesAndHighWindOverride();
     testCompleteScenarioFlow();
+    testCalmRetainsLastBearingUntilRestart();
 
     if (failures != 0) {
         std::cerr << failures << " airport wind station test(s) failed" << std::endl;

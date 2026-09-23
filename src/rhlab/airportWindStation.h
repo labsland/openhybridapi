@@ -65,6 +65,7 @@ struct AirportWindStationData : public BaseOutputDataType {
     std::uint32_t seq = 0;
     AirportWindScenario scenario = AirportWindScenario::Calm;
     AirportWindPhase phase = AirportWindPhase::Reset;
+    // Last physical bearing when windBand is Calm, not a live wind reading.
     std::int16_t windDirection = 0;
     AirportWindBand windBand = AirportWindBand::Calm;
     bool aligned = false;

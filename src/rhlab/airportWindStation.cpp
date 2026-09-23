@@ -240,7 +240,9 @@ void AirportWindStationSimulation::applyScenario(AirportWindScenario scenario) {
     switch (scenario) {
         case AirportWindScenario::Calm:
             mState.windBand = AirportWindBand::Calm;
-            mState.windDirection = 0;
+            // Calm has no measurable direction. Keep the last physical
+            // bearing for the vane/sleeve and reserve the initial 0-degree
+            // pose for an explicit activity restart.
             mState.aligned = false;
             alignmentProgress = 0.0;
             break;

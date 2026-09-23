@@ -71,6 +71,9 @@ Browser commands select `calm`, `steady`, `realign`, or `highWind`. The
 canonical `restart` action reinitializes only the simulated plant and preserves
 the sampled controller outputs. Controller reset belongs to the target: DE1
 uses its board/course reset input and STM uses the normal target reset path.
+Calm leaves the last physical wind bearing and nacelle orientation in place,
+clears alignment, and stops yaw; `windDirection` remains in reports for scene
+reconstruction but is not a current direction measurement while `windBand=calm`.
 During the compatibility release, the legacy `reset` action still emits the
 old 250 ms slot-0 pulse; new controllers ignore that slot. Versioned reports
 describe the complete observable plant and controller state, allowing the
