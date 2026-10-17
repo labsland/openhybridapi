@@ -1,0 +1,8 @@
+execute_process(COMMAND "${IVERILOG}" -g2012 -s airport_garage_adapter_tb -o "${BUILD_ROOT}/garage-adapter-test" "${SOURCE_ROOT}/examples/airportTerminalGarage/airport_garage_adapter.sv" "${SOURCE_ROOT}/examples/airportTerminalGarage/airport_garage_adapter_tb.sv" RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+ message(FATAL_ERROR "Garage adapter compilation failed")
+endif()
+execute_process(COMMAND "${VVP}" "${BUILD_ROOT}/garage-adapter-test" RESULT_VARIABLE result)
+if(NOT result EQUAL 0)
+ message(FATAL_ERROR "Garage adapter handshake tests failed")
+endif()

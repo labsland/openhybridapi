@@ -22,7 +22,7 @@ Positions are zero-based simulation slots, not Pico pin numbers.
 | Controller → simulation | 4 | fullLamp | 31 |
 | Controller → simulation | 5 | completionAck | 33 |
 
-This is incompatible with the old three-bay parking bitstream. A supplied synchronized wrapper owns completionAck and emits exactly one arrived/departed clock pulse. Students retain gate/lamp decisions, bounded occupancy, hours, rush-window ASMD/control/datapath, RAM and native displays. The wrapper source is supplied beside the prototype client under `controller/`; it is not a completed student design.
+This is incompatible with the old three-bay parking bitstream. A supplied synchronized wrapper owns completionAck and emits exactly one arrived/departed clock pulse. Students retain gate/lamp decisions, bounded occupancy, hours, rush-window ASMD/control/datapath, RAM and native displays. The wrapper source and testbench are in `examples/airportTerminalGarage/`, mirrored by the prototype client under `controller/`. They are not a completed student design.
 
 ## Reliable passage delivery
 

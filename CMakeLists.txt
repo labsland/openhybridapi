@@ -27,6 +27,12 @@ add_executable(hybridapi
 
 include(CTest)
 if(BUILD_TESTING)
+    find_program(GARAGE_IVERILOG iverilog)
+    find_program(GARAGE_VVP vvp)
+    if(GARAGE_IVERILOG AND GARAGE_VVP)
+        add_test(NAME airport_garage_adapter
+            COMMAND ${CMAKE_COMMAND} -DIVERILOG=${GARAGE_IVERILOG} -DVVP=${GARAGE_VVP} -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR} -DBUILD_ROOT=${CMAKE_CURRENT_BINARY_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/garage_adapter_test.cmake)
+    endif()
     add_executable(airport_terminal_garage_tests tests/airport_terminal_garage_tests.cpp src/labsland/simulations/targetdevice.cpp src/rhlab/airportTerminalGarage.cpp)
     target_include_directories(airport_terminal_garage_tests PRIVATE src)
     add_test(NAME airport_terminal_garage_tests COMMAND airport_terminal_garage_tests)
