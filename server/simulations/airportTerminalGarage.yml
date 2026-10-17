@@ -1,0 +1,10 @@
+name: Airport Terminal Garage
+description: Three-level parking controller activity (Lab 6 prototype)
+iframe:
+  url: http://localhost:8793/
+  height: 760
+gpios:
+  sim2dut:
+    labels: [entryWaiting, exitWaiting, entryComplete, exitComplete, worldReady]
+  dut2sim:
+    labels: [openEntrance, openExit, entrancePermitLamp, exitPermitLamp, fullLamp, completionAck]

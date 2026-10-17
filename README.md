@@ -30,6 +30,7 @@ part of this public repository.
 | --- | --- | --- | --- |
 | `watertank` | Liquid-level control with two pumps and three level sensors | [`watertanksimulation.cpp`](src/labsland/simulations/watertanksimulation.cpp) | [`watertank.yml`](server/simulations/watertank.yml) |
 | `butterfly` | Breadboard and digital-logic activity for DE1-SoC and STM32WB55RG | [`butterfly.cpp`](src/rhlab/butterfly.cpp) | [`butterfly.yml`](server/simulations/butterfly.yml), [`butterfly-stm32-wb55rg.yml`](server/simulations/butterfly-stm32-wb55rg.yml) |
+| `airportTerminalGarage` | Three-level parking controller, persistent passage handshake and world checkpoints | [`airportTerminalGarage.cpp`](src/rhlab/airportTerminalGarage.cpp) | [`airportTerminalGarage.yml`](server/simulations/airportTerminalGarage.yml) |
 | `airportWindStation` | Wind-turbine alignment, generation, and high-wind safety | [`airportWindStation.cpp`](src/rhlab/airportWindStation.cpp) | [`airportWindStation.yml`](server/simulations/airportWindStation.yml) |
 | `matrix` | Serialized two-color LED-matrix output | [`matrix.cpp`](src/rhlab/matrix.cpp) | [`matrix.yml`](server/simulations/matrix.yml) |
 | `morse` | Single-line Morse signaling | [`morse.cpp`](src/rhlab/morse.cpp) | [`morse.yml`](server/simulations/morse.yml) |
@@ -164,3 +165,7 @@ parent.postMessage({
 ```
 
 It should also be ready to receive and handle sim2web messages, for which it will need to listen for similar messages from within the iframe.
+
+### Airport Terminal Garage
+
+The new `airportTerminalGarage` prototype uses the browser-owned world and a persistent GPIO passage handshake. See [the contract and local test workflow](docs/airport-terminal-garage.md). It is separate from the old `parking` implementation.
