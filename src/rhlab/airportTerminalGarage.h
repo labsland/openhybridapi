@@ -32,7 +32,7 @@ public:
 private:
  double staleSeconds=0,heartbeat=0;
  std::uint32_t lastRequest=0,lastEvent=0;
- std::string lastPayload;
+ std::string lastPayload, lastEventPayload;
  bool initialized=false;
  void apply(AirportGarageRequest const&);
  void writeSensors();

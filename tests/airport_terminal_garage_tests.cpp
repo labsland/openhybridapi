@@ -145,7 +145,8 @@ void testDelivery(){Fixture f;CHECK(f.target->plantOutputs.size()==5);CHECK(f.ta
  f.advance(2500);CHECK(!f.target->plantOutputs[4]);CHECK(f.target->plantOutputs[2]);CHECK(std::string(f.simulation.mState.notice)=="stale");
  send(f,request(3,"state",cp(1,0,1)+"&entryWaiting=1&exitWaiting=0&worldReady=1"));f.target->controllerOutputs[5]=true;f.advance(30);CHECK(!f.target->plantOutputs[2]);CHECK(std::string(f.simulation.mState.eventStatus)=="delivered");
  f.target->controllerOutputs[5]=false;f.advance(30);CHECK(std::string(f.simulation.mState.eventStatus)=="cleared");send(f,request(4,"passage",cp(1,0,1)+"&eventId=1&direction=entry"));CHECK(!f.target->plantOutputs[2]);CHECK(f.simulation.mState.checkpoint.physicalCount==1);
- send(f,request(5,"state",cp(1,1,1)+"&entryWaiting=0&exitWaiting=1&worldReady=1"));f.target->controllerOutputs[1]=true;f.advance(20);send(f,request(6,"passage",cp(0,0,2)+"&eventId=2&direction=exit"));CHECK(f.target->plantOutputs[3]);CHECK(f.simulation.mState.checkpoint.physicalCount==0);
+ send(f,request(5,"passage",cp(0,0,1)+"&eventId=1&direction=exit"));CHECK(std::string(f.simulation.mState.requestStatus)=="rejected");CHECK(!f.target->plantOutputs[3]);
+ send(f,request(6,"state",cp(1,1,1)+"&entryWaiting=0&exitWaiting=1&worldReady=1"));f.target->controllerOutputs[1]=true;f.advance(20);send(f,request(7,"passage",cp(0,0,2)+"&eventId=2&direction=exit"));CHECK(f.target->plantOutputs[3]);CHECK(f.simulation.mState.checkpoint.physicalCount==0);
 }
 void testValidation(){Fixture f;send(f,request(1,"state",cp()+"&entryWaiting=1&exitWaiting=0&worldReady=1"));send(f,request(2,"passage",cp(1,0,1)+"&eventId=1&direction=entry"));CHECK(std::string(f.simulation.mState.requestStatus)=="rejected");CHECK(!f.target->plantOutputs[2]);
  send(f,request(3,"state",cp(10)+"&entryWaiting=1&exitWaiting=0&worldReady=1"));CHECK(f.simulation.mState.checkpoint.physicalCount==0);

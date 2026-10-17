@@ -53,18 +53,19 @@ void AirportTerminalGarageSimulation::apply(AirportGarageRequest const&r){
  if(r.action==GarageAction::Restart){
   // Explicit world baseline only. Never assert a controller-reset GPIO.
   const auto seq=mState.seq,session=mState.sessionId;const bool valid=mState.sampleValid;
-  mState=AirportGarageData{};mState.seq=seq;mState.sessionId=session+1u;if(!mState.sessionId)mState.sessionId=1;mState.requestSeq=r.requestSeq;mState.sampleValid=valid;lastRequest=lastEvent=0;lastPayload.clear();
+  mState=AirportGarageData{};mState.seq=seq;mState.sessionId=session+1u;if(!mState.sessionId)mState.sessionId=1;mState.requestSeq=r.requestSeq;mState.sampleValid=valid;lastRequest=lastEvent=0;lastPayload.clear();lastEventPayload.clear();
  }else if(r.action==GarageAction::State){
   unsigned occupied=0;for(auto mask=r.checkpoint.parkedMask;mask;mask>>=1)occupied+=mask&1u;
-  if(r.checkpoint.physicalCount!=mState.checkpoint.physicalCount||occupied>r.checkpoint.physicalCount){mState.requestStatus="rejected";mState.notice="invalidRequest";requestReportState();return;}
+  if(r.checkpoint.passageId!=lastEvent||r.checkpoint.physicalCount!=mState.checkpoint.physicalCount||occupied>r.checkpoint.physicalCount){mState.requestStatus="rejected";mState.notice="invalidRequest";requestReportState();return;}
   mState.entryWaiting=r.entryWaiting;mState.exitWaiting=r.exitWaiting;mState.worldReady=r.worldReady&&initialized;
   mState.checkpoint=r.checkpoint;
  }else if(r.action==GarageAction::Passage){
-  if(r.eventId==lastEvent){/* Retransmission with a new request ID: no second pulse. */}
+  const std::string eventPayload=std::to_string(r.entry)+checkpointText(r.checkpoint);
+  if(r.eventId==lastEvent){if(eventPayload!=lastEventPayload){mState.requestStatus="rejected";mState.notice="invalidRequest";}}
   else if(!mState.worldReady||mState.entryComplete||mState.exitComplete||mState.completionAck||std::string(mState.eventStatus)=="delivered"){mState.requestStatus="rejected";mState.notice="busy";}
   else if(r.eventId!=lastEvent+1||r.checkpoint.passageId!=r.eventId||
    (r.entry?(!mState.entryWaiting||!mState.openEntrance||r.checkpoint.physicalCount!=mState.checkpoint.physicalCount+1):( !mState.exitWaiting||!mState.openExit||mState.checkpoint.physicalCount==0||r.checkpoint.physicalCount+1!=mState.checkpoint.physicalCount))){mState.requestStatus="rejected";mState.notice="invalidRequest";}
-  else{lastEvent=r.eventId;mState.eventId=r.eventId;mState.checkpoint=r.checkpoint;mState.entryComplete=r.entry;mState.exitComplete=!r.entry;mState.eventStatus="latched";mState.requestStatus="accepted";}
+  else{lastEvent=r.eventId;lastEventPayload=eventPayload;mState.eventId=r.eventId;mState.checkpoint=r.checkpoint;mState.entryComplete=r.entry;mState.exitComplete=!r.entry;mState.eventStatus="latched";mState.requestStatus="accepted";}
  }
  writeSensors();requestReportState();
 }
