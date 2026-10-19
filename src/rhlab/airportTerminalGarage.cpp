@@ -38,6 +38,10 @@ std::string AirportGarageData::serialize()const{
  <<checkpointText(checkpoint)<<"&eventStatus="<<eventStatus<<"&requestStatus="<<requestStatus<<"&notice="<<notice;return o.str();
 }
 void AirportTerminalGarageSimulation::initialize(){
+ // Mode selection reuses this object; replay guards belong to the new session.
+ lastRequest=lastEvent=0;
+ lastPayload.clear();lastEventPayload.clear();
+ staleSeconds=heartbeat=0;
  initialized=targetDevice->initializeSimulation({"entryWaiting","exitWaiting","entryComplete","exitComplete","worldReady"},{"openEntrance","openExit","entrancePermitLamp","exitPermitLamp","fullLamp","completionAck"});
  mState=AirportGarageData{};mState.sessionId=static_cast<std::uint32_t>(timeManager->getAbsoluteTime())|1u;
  mState.notice=initialized?"none":"recoveryRequired";setReportWhenMarked(true);setVirtualEnvironmentReportPeriod(.02f);writeSensors();requestReportState();

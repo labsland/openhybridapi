@@ -155,5 +155,35 @@ void testValidation(){Fixture f;send(f,request(1,"state",cp()+"&entryWaiting=1&e
  send(f,request(5,"restart"));CHECK(f.simulation.mState.sessionId==2);for(bool v:f.target->plantOutputs)CHECK(!v);
  auto old=request(6,"state",cp()+"&entryWaiting=1&exitWaiting=0&worldReady=1");send(f,old);CHECK(!f.target->plantOutputs[0]);
 }
+void testModeReselectionStartsFreshSession() {
+    Fixture f;
+    f.target->controllerOutputs[0] = true;
+    send(f, request(1000, "state", cp() + "&entryWaiting=1&exitWaiting=0&worldReady=1"));
+    send(f, request(1001, "passage", cp(1, 0, 1) + "&eventId=1&direction=entry"));
+    CHECK(f.simulation.mState.checkpoint.physicalCount == 1);
+    CHECK(f.target->plantOutputs[2]);
+    f.advance(2500);
+
+    // Firmware reuses this simulation object when a new user selects its mode.
+    f.simulation._initialize();
+    const auto session = f.simulation.mState.sessionId;
+    CHECK(session != 1);
+    CHECK(f.simulation.mState.requestFloor == 0);
+    CHECK(f.simulation.mState.checkpoint.physicalCount == 0);
+    for (bool value : f.target->plantOutputs) CHECK(!value);
+    const auto freshRequest = [session](unsigned seq, const char* action, const std::string& fields) {
+        return "v=3&sessionId=" + std::to_string(session) + "&requestSeq=" +
+            std::to_string(seq) + "&action=" + action + fields;
+    };
+    f.target->controllerOutputs[0] = true;
+    send(f, freshRequest(1, "state", cp() + "&entryWaiting=1&exitWaiting=0&worldReady=1"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "completed");
+    CHECK(f.simulation.mState.requestFloor == 1);
+    CHECK(f.target->plantOutputs[4]);
+    send(f, freshRequest(2, "passage", cp(1, 0, 1) + "&eventId=1&direction=entry"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "accepted");
+    CHECK(f.simulation.mState.checkpoint.physicalCount == 1);
+    CHECK(f.target->plantOutputs[2]);
+}
 } // namespace
-int main(){testParser();testDelivery();testValidation();if(failures){std::cerr<<failures<<" checks failed\n";return EXIT_FAILURE;}std::cout<<"Garage parsing, GPIO, delivery, deduplication, stale/reconnect and reset checks passed\n";return EXIT_SUCCESS;}
+int main(){testParser();testDelivery();testValidation();testModeReselectionStartsFreshSession();if(failures){std::cerr<<failures<<" checks failed\n";return EXIT_FAILURE;}std::cout<<"Garage parsing, GPIO, delivery, deduplication, stale/reconnect and reset checks passed\n";return EXIT_SUCCESS;}
