@@ -33,6 +33,8 @@ private:
  double staleSeconds=0,heartbeat=0;
  std::uint32_t lastRequest=0,lastEvent=0;
  std::string lastPayload, lastEventPayload;
+ // Result of request lastRequest, repeated to its retries
+ const char* lastStatus="completed";const char* lastNotice="none";
  bool initialized=false;
  void apply(AirportGarageRequest const&);
  void writeSensors();

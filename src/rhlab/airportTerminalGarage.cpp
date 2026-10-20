@@ -41,6 +41,7 @@ void AirportTerminalGarageSimulation::initialize(){
  // Mode selection reuses this object; replay guards belong to the new session.
  lastRequest=lastEvent=0;
  lastPayload.clear();lastEventPayload.clear();
+ lastStatus="completed";lastNotice="none";
  staleSeconds=heartbeat=0;
  initialized=targetDevice->initializeSimulation({"entryWaiting","exitWaiting","entryComplete","exitComplete","worldReady"},{"openEntrance","openExit","entrancePermitLamp","exitPermitLamp","fullLamp","completionAck"});
  mState=AirportGarageData{};mState.sessionId=static_cast<std::uint32_t>(timeManager->getAbsoluteTime())|1u;
@@ -52,7 +53,9 @@ void AirportTerminalGarageSimulation::apply(AirportGarageRequest const&r){
  const std::string payload=std::to_string(static_cast<int>(r.action))+checkpointText(r.checkpoint)+std::to_string(r.eventId)+std::to_string(r.entry)+std::to_string(r.entryWaiting)+std::to_string(r.exitWaiting)+std::to_string(r.worldReady);
  mState.requestSeq=r.requestSeq;
  if(r.requestSeq<lastRequest||(r.requestSeq==lastRequest&&payload!=lastPayload)){mState.requestStatus="rejected";mState.notice="invalidRequest";requestReportState();return;}
- if(r.requestSeq==lastRequest){staleSeconds=0;requestReportState();return;}
+ // A retry gets the result of its own request, not the status a later
+ // stray (an older, out-of-order copy) may have left behind
+ if(r.requestSeq==lastRequest){mState.requestStatus=lastStatus;mState.notice=lastNotice;staleSeconds=0;requestReportState();return;}
  lastRequest=r.requestSeq;mState.requestFloor=lastRequest;lastPayload=payload;staleSeconds=0;mState.requestStatus="completed";mState.notice="none";
  if(r.action==GarageAction::Restart){
   // Explicit world baseline only. Never assert a controller-reset GPIO.
@@ -60,7 +63,7 @@ void AirportTerminalGarageSimulation::apply(AirportGarageRequest const&r){
   mState=AirportGarageData{};mState.seq=seq;mState.sessionId=session+1u;if(!mState.sessionId)mState.sessionId=1;mState.requestSeq=r.requestSeq;mState.sampleValid=valid;lastRequest=lastEvent=0;lastPayload.clear();lastEventPayload.clear();
  }else if(r.action==GarageAction::State){
   unsigned occupied=0;for(auto mask=r.checkpoint.parkedMask;mask;mask>>=1)occupied+=mask&1u;
-  if(r.checkpoint.passageId!=lastEvent||r.checkpoint.physicalCount!=mState.checkpoint.physicalCount||occupied>r.checkpoint.physicalCount){mState.requestStatus="rejected";mState.notice="invalidRequest";requestReportState();return;}
+  if(r.checkpoint.passageId!=lastEvent||r.checkpoint.physicalCount!=mState.checkpoint.physicalCount||occupied>r.checkpoint.physicalCount){mState.requestStatus=lastStatus="rejected";mState.notice=lastNotice="invalidRequest";requestReportState();return;}
   mState.entryWaiting=r.entryWaiting;mState.exitWaiting=r.exitWaiting;mState.worldReady=r.worldReady&&initialized;
   mState.checkpoint=r.checkpoint;
  }else if(r.action==GarageAction::Passage){
@@ -71,6 +74,7 @@ void AirportTerminalGarageSimulation::apply(AirportGarageRequest const&r){
    (r.entry?(!mState.entryWaiting||!mState.openEntrance||r.checkpoint.physicalCount!=mState.checkpoint.physicalCount+1):( !mState.exitWaiting||!mState.openExit||mState.checkpoint.physicalCount==0||r.checkpoint.physicalCount+1!=mState.checkpoint.physicalCount))){mState.requestStatus="rejected";mState.notice="invalidRequest";}
   else{lastEvent=r.eventId;lastEventPayload=eventPayload;mState.eventId=r.eventId;mState.checkpoint=r.checkpoint;mState.entryComplete=r.entry;mState.exitComplete=!r.entry;mState.eventStatus="latched";mState.requestStatus="accepted";}
  }
+ lastStatus=mState.requestStatus;lastNotice=mState.notice;
  writeSensors();requestReportState();
 }
 void AirportTerminalGarageSimulation::writeSensors(){if(!initialized)return;targetDevice->setGpio(0,mState.entryWaiting);targetDevice->setGpio(1,mState.exitWaiting);targetDevice->setGpio(2,mState.entryComplete);targetDevice->setGpio(3,mState.exitComplete);targetDevice->setGpio(4,mState.worldReady);}

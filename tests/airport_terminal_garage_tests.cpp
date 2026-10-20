@@ -185,5 +185,62 @@ void testModeReselectionStartsFreshSession() {
     CHECK(f.simulation.mState.checkpoint.physicalCount == 1);
     CHECK(f.target->plantOutputs[2]);
 }
+// A relay may deliver an older request after a newer one. Firmware rejects
+// the stray, and a retry of the newer request must report its own result.
+void testRetryGetsItsOwnResult() {
+    Fixture f;
+    send(f, request(10, "state", cp() + "&entryWaiting=0&exitWaiting=0&worldReady=1"));
+    send(f, request(11, "state", cp() + "&entryWaiting=1&exitWaiting=0&worldReady=1"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "completed");
+    send(f, request(10, "state", cp() + "&entryWaiting=0&exitWaiting=0&worldReady=1"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "rejected");
+    CHECK(f.target->plantOutputs[0]);  // the stray changed nothing
+    send(f, request(11, "state", cp() + "&entryWaiting=1&exitWaiting=0&worldReady=1"));
+    CHECK(f.simulation.mState.requestSeq == 11);
+    CHECK(std::string(f.simulation.mState.requestStatus) == "completed");
+    CHECK(std::string(f.simulation.mState.notice) == "none");
+    // A request that really was rejected is still rejected on retry
+    send(f, request(12, "state", cp(3) + "&entryWaiting=1&exitWaiting=0&worldReady=1"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "rejected");
+    send(f, request(12, "state", cp(3) + "&entryWaiting=1&exitWaiting=0&worldReady=1"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "rejected");
+    CHECK(std::string(f.simulation.mState.notice) == "invalidRequest");
+}
+// One passage at a time: a new event is busy while one is latched or its
+// acknowledgement is still high, and accepted once the cycle has cleared
+void testBusyWhileEventPending() {
+    Fixture f;
+    f.target->controllerOutputs[0] = true;
+    send(f, request(1, "state", cp() + "&entryWaiting=1&exitWaiting=0&worldReady=1"));
+    send(f, request(2, "passage", cp(1, 0, 1) + "&eventId=1&direction=entry"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "accepted");
+    send(f, request(3, "state", cp(1, 0, 1) + "&entryWaiting=1&exitWaiting=0&worldReady=1"));
+    send(f, request(4, "passage", cp(2, 0, 2) + "&eventId=2&direction=entry"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "rejected");
+    CHECK(std::string(f.simulation.mState.notice) == "busy");
+    CHECK(f.simulation.mState.eventId == 1);
+    CHECK(f.simulation.mState.checkpoint.physicalCount == 1);
+    f.target->controllerOutputs[5] = true;
+    f.advance(30);
+    CHECK(std::string(f.simulation.mState.eventStatus) == "delivered");
+    send(f, request(5, "passage", cp(2, 0, 2) + "&eventId=2&direction=entry"));
+    CHECK(std::string(f.simulation.mState.notice) == "busy");
+    CHECK(!f.target->plantOutputs[2]);
+    f.target->controllerOutputs[5] = false;
+    f.advance(30);
+    CHECK(std::string(f.simulation.mState.eventStatus) == "cleared");
+    send(f, request(6, "passage", cp(2, 0, 2) + "&eventId=2&direction=entry"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "accepted");
+    CHECK(f.simulation.mState.checkpoint.physicalCount == 2);
+    CHECK(f.target->plantOutputs[2]);
+}
+// A checkpoint cannot claim more parked bays than cars inside
+void testParkedMaskCannotExceedCount() {
+    Fixture f;
+    send(f, request(1, "state", cp() + "&entryWaiting=0&exitWaiting=0&worldReady=1"));
+    send(f, request(2, "state", cp(0, 1) + "&entryWaiting=0&exitWaiting=0&worldReady=1"));
+    CHECK(std::string(f.simulation.mState.requestStatus) == "rejected");
+    CHECK(f.simulation.mState.checkpoint.parkedMask == 0);
+}
 } // namespace
-int main(){testParser();testDelivery();testValidation();testModeReselectionStartsFreshSession();if(failures){std::cerr<<failures<<" checks failed\n";return EXIT_FAILURE;}std::cout<<"Garage parsing, GPIO, delivery, deduplication, stale/reconnect and reset checks passed\n";return EXIT_SUCCESS;}
+int main(){testParser();testDelivery();testValidation();testModeReselectionStartsFreshSession();testRetryGetsItsOwnResult();testBusyWhileEventPending();testParkedMaskCannotExceedCount();if(failures){std::cerr<<failures<<" checks failed\n";return EXIT_FAILURE;}std::cout<<"Garage parsing, GPIO, delivery, deduplication, stale/reconnect and reset checks passed\n";return EXIT_SUCCESS;}
