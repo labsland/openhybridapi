@@ -41,6 +41,12 @@ part of this public repository.
 | `wiper2BitDeusto` | Rain-sensing wiper control with a two-bit motion command | [`wiper2BitDeusto.cpp`](src/deusto/wiper2BitDeusto.cpp) | [`wiper2BitDeusto.yml`](server/simulations/wiper2BitDeusto.yml) |
 <!-- public-simulation-catalog:end -->
 
+### LED Matrix views
+
+The existing `matrix` runner supports both flat and physical-board 3D output
+views with the same firmware and controller programs. See
+[the shared frame contract and integration](docs/led-matrix-views.md).
+
 ### Airport Wind Station
 
 The Airport Wind Station is a deterministic wind-turbine control activity. A

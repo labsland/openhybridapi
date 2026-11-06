@@ -4,6 +4,11 @@ description: This is a simulation of a LED Matrix
 iframe:
   url: "matrix/matrix.html"
   height: 900
+  views:
+    - name: LED Matrix 2D
+      url: https://static-apps.labsland.com/simulations/ledMatrix/matrix.html
+    - name: LED Matrix 3D
+      url: https://static-apps.labsland.com/simulations/ledMatrix3D/index.html
 
 gpios:
   dut2sim:

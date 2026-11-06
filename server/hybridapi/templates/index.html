@@ -387,6 +387,15 @@
                 <li>Note: please use relative URLs inside your simulation</li>
             </ul>
 
+            {% if config['SIMULATION_CONFIG']['iframe'].get('views') %}
+            <label for="visualization-view">Visualization</label>
+            <select id="visualization-view" class="form-select mb-3">
+                {% for view in config['SIMULATION_CONFIG']['iframe']['views'] %}
+                <option value="{{ view['url'] }}">{{ view['name'] }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+
             {% set initial_height = config['SIMULATION_CONFIG']['iframe'].get('height', '500') %}
             <iframe id="simulation-iframe" src="{{ iframe_src }}" width="95%" height="{{ initial_height }}" style="border: 1px solid black"></iframe>
 
@@ -403,6 +412,10 @@
         window.DUT2SIM_STATUS = "";
         window.WEB2SIM_STATUS = "";
         window.SIM2WEB_STATUS = "";
+        var viewSelector = document.getElementById('visualization-view');
+        if (viewSelector) viewSelector.addEventListener('change', function () {
+            document.getElementById('simulation-iframe').src = viewSelector.value;
+        });
         loadSimulation();
 
         iFrameResize({ log: false }, '#simulation-iframe')
