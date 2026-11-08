@@ -8,6 +8,8 @@ using namespace std;
 using namespace RHLab::LEDMatrix;
 
 void MatrixSimulation::initialize(){
+    // Simulation objects are reused between sessions. Start each one blank.
+    this->mState = MatrixData{};
     this->targetDevice->initializeSimulation({}, {"latch", "pulse", "green", "red"});
 
     setReportWhenMarked(true);
